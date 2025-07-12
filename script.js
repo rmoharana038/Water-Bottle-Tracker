@@ -37,14 +37,15 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   window.logout = async function () {
-    try {
-      await signOut(auth);
-      window.location.href = 'login.html';
-    } catch (error) {
-      showToast('Logout failed', 'error');
-      console.error(error);
-    }
-  };
+  try {
+    await signOut(auth);
+    // Don't clear entries
+    window.location.href = 'login.html';
+  } catch (error) {
+    showToast('Logout failed', 'error');
+    console.error(error);
+  }
+};
 
   function updateCurrentMonth() {
     const now = new Date();
