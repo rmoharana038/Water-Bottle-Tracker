@@ -3,125 +3,119 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login | Water Bottle Tracker</title>
-  <link rel="stylesheet" href="style.css"/>
-  <style>
-    .auth-container {
-      max-width: 400px;
-      margin: 40px auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-    }
-    .auth-container h2 {
-      margin-bottom: 1rem;
-      text-align: center;
-      color: #3b82f6;
-    }
-    .auth-container input {
-      width: 100%;
-      margin-bottom: 1rem;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    .auth-container .toggle {
-      text-align: center;
-      color: #3b82f6;
-      cursor: pointer;
-      margin-top: 1rem;
-    }
-    .auth-container .btn-primary {
-      width: 100%;
-    }
-    .password-wrapper {
-      position: relative;
-    }
-    .toggle-password {
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      cursor: pointer;
-      font-size: 14px;
-      color: #555;
-    }
-    .link {
-      font-size: 14px;
-      color: #3b82f6;
-      text-decoration: underline;
-      cursor: pointer;
-      text-align: right;
-    }
-  </style>
+  <title>Login | Water Tracker</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="auth-container" id="authBox">
-    <h2 id="formTitle">Login</h2>
-    <input type="email" id="email" placeholder="Email" />
-    
-    <div class="password-wrapper">
-      <input type="password" id="password" placeholder="Password" />
-      <span class="toggle-password" onclick="togglePassword()">👁️</span>
+  <main class="auth-container">
+    <div class="auth-card">
+      <h2 id="formTitle">Login</h2>
+      <form id="authForm">
+        <div id="signupFields" style="display: none;">
+          <input type="text" id="firstName" placeholder="First Name" required />
+          <input type="text" id="lastName" placeholder="Last Name" required />
+          <input type="tel" id="mobile" placeholder="Mobile Number" required />
+        </div>
+        <input type="email" id="email" placeholder="Email" required />
+        <div class="password-wrapper">
+          <input type="password" id="password" placeholder="Password" required />
+          <input type="checkbox" id="showPassword"> <label for="showPassword">Show</label>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitBtn">Login</button>
+        <p id="toggleText">Don't have an account? <a href="#" id="toggleForm">Signup</a></p>
+        <p><a href="#" id="resetPassword">Forgot Password?</a></p>
+      </form>
     </div>
-
-    <button class="btn btn-primary" onclick="handleAuth()">Login</button>
-    <div class="link" onclick="resetPassword()">Forgot Password?</div>
-    <div class="toggle" onclick="toggleMode()">Switch to Signup</div>
   </main>
 
   <script type="module">
-    import { auth } from './firebase-init.js';
-    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    let mode = 'login';
-
-    window.toggleMode = function () {
-      mode = mode === 'login' ? 'signup' : 'login';
-      document.getElementById('formTitle').textContent = mode === 'login' ? 'Login' : 'Signup';
-      document.querySelector('.btn-primary').textContent = mode === 'login' ? 'Login' : 'Signup';
-      document.querySelector('.toggle').textContent = mode === 'login' ? 'Switch to Signup' : 'Switch to Login';
-      document.querySelector('.link').style.display = mode === 'login' ? 'block' : 'none';
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
+      authDomain: "water-bottle-tracker-43537.firebaseapp.com",
+      projectId: "water-bottle-tracker-43537",
+      storageBucket: "water-bottle-tracker-43537.appspot.com",
+      messagingSenderId: "424777349690",
+      appId: "1:424777349690:web:54056417c24cd2f0329303"
     };
 
-    window.handleAuth = async function () {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const authForm = document.getElementById('authForm');
+    const formTitle = document.getElementById('formTitle');
+    const submitBtn = document.getElementById('submitBtn');
+    const toggleForm = document.getElementById('toggleForm');
+    const toggleText = document.getElementById('toggleText');
+    const signupFields = document.getElementById('signupFields');
+    const showPassword = document.getElementById('showPassword');
+    const resetPassword = document.getElementById('resetPassword');
+
+    let isSignup = false;
+
+    toggleForm.addEventListener('click', (e) => {
+      e.preventDefault();
+      isSignup = !isSignup;
+      formTitle.textContent = isSignup ? "Signup" : "Login";
+      submitBtn.textContent = isSignup ? "Signup" : "Login";
+      toggleText.innerHTML = isSignup
+        ? `Already have an account? <a href="#" id="toggleForm">Login</a>`
+        : `Don't have an account? <a href="#" id="toggleForm">Signup</a>`;
+      signupFields.style.display = isSignup ? "block" : "none";
+    });
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
       const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
+      const password = document.getElementById('password').value;
 
-      if (!email || !password) {
-        alert('Please fill in all fields');
-        return;
-      }
-
-      try {
-        if (mode === 'login') {
-          await signInWithEmailAndPassword(auth, email, password);
-        } else {
-          await createUserWithEmailAndPassword(auth, email, password);
-        }
-        window.location.href = 'index.html';
-      } catch (error) {
-        alert(error.message);
-      }
-    };
-
-    window.resetPassword = async function () {
-      const email = prompt('Enter your email to receive reset link:');
-      if (email) {
+      if (isSignup) {
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const mobile = document.getElementById('mobile').value.trim();
         try {
-          await sendPasswordResetEmail(auth, email);
-          alert('Reset link sent to your email.');
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          await setDoc(doc(db, "users", userCredential.user.uid), {
+            firstName,
+            lastName,
+            email,
+            mobile
+          });
+          window.location.href = "index.html";
         } catch (error) {
           alert(error.message);
         }
+      } else {
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          window.location.href = "index.html";
+        } catch (error) {
+          alert("Login failed: " + error.message);
+        }
       }
-    };
+    });
 
-    window.togglePassword = function () {
-      const passwordInput = document.getElementById('password');
-      passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
-    };
+    showPassword.addEventListener('change', () => {
+      const pwd = document.getElementById('password');
+      pwd.type = showPassword.checked ? 'text' : 'password';
+    });
+
+    resetPassword.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = prompt("Enter your email to reset password:");
+      if (email) {
+        try {
+          await sendPasswordResetEmail(auth, email);
+          alert("Password reset link sent to your email.");
+        } catch (error) {
+          alert("Error: " + error.message);
+        }
+      }
+    });
   </script>
 </body>
 </html>
