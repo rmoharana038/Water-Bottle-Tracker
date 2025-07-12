@@ -1,5 +1,27 @@
 // Water Bottle Tracker JavaScript
 
+import { auth } from './firebase-init.js';
+import {
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// Auth state check
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = 'login.html';
+  }
+});
+
+// Logout
+window.logout = function () {
+  signOut(auth).then(() => {
+    window.location.href = 'login.html';
+  }).catch((error) => {
+    alert("Logout failed: " + error.message);
+  });
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     // DOM Elements
     const bottleInput = document.getElementById('bottleCount');
