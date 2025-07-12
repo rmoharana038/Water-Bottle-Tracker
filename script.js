@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', function () {
   window.logout = async function () {
     try {
       await signOut(auth);
-      localStorage.removeItem('water_entries');
       window.location.href = 'login.html';
     } catch (error) {
       showToast('Logout failed', 'error');
