@@ -2,155 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Login - Water Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login - Water Bottle Tracker</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="logo.png" />
   <style>
     body {
-      font-family: system-ui, sans-serif;
-      background: #f3f4f6;
-      margin: 0;
-      padding: 0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background-color: #f0f4f8;
     }
-
-    .auth-container {
-      max-width: 400px;
-      margin: 60px auto;
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+      width: 80%;
+      max-width: 300px;
+    }
+    .login-card {
       background: white;
-      padding: 32px;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .auth-container h2 {
-      margin-bottom: 20px;
-      text-align: center;
-      color: #1f2937;
-    }
-
-    .auth-container form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .auth-container input {
-      padding: 12px;
-      font-size: 16px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-    }
-
-    .auth-container button {
-      padding: 12px;
-      background: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .auth-container button:hover {
-      background: #2563eb;
-    }
-
-    .auth-container p {
-      font-size: 14px;
-      text-align: center;
-      color: #6b7280;
-    }
-
-    .auth-container a {
-      color: #3b82f6;
-      text-decoration: none;
-    }
-
-    .auth-container a:hover {
-      text-decoration: underline;
-    }
-
-    .auth-container .forgot {
-      text-align: right;
-      margin-top: -12px;
-      margin-bottom: 12px;
-    }
-
-    .error-message {
-      color: red;
-      text-align: center;
-      font-size: 14px;
-      margin-top: 10px;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      display: inline-block;
     }
   </style>
 </head>
 <body>
-  <div class="auth-container">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <input type="email" id="loginEmail" placeholder="Email" required />
-      <input type="password" id="loginPassword" placeholder="Password" required />
-      <div class="forgot">
-        <a href="reset.html">Forgot Password?</a>
-      </div>
-      <button type="submit">Login</button>
-      <div id="errorMessage" class="error-message"></div>
-    </form>
-    <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+  <div class="login-card">
+    <h2>Login to Water Tracker</h2>
+    <input type="email" id="email" placeholder="Email" /><br />
+    <input type="password" id="password" placeholder="Password" /><br />
+    <button onclick="login()">Login</button>
+    <p id="msg" style="color:red;"></p>
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import { auth } from './firebase-init.js';
+    import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
-      authDomain: "water-bottle-tracker-43537.firebaseapp.com",
-      projectId: "water-bottle-tracker-43537",
-      storageBucket: "water-bottle-tracker-43537.appspot.com",
-      messagingSenderId: "424777349690",
-      appId: "1:424777349690:web:54056417c24cd2f0329303"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    const form = document.getElementById("loginForm");
-    const errorMessage = document.getElementById("errorMessage");
-
-    // Auto-redirect if already logged in
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        window.location.href = "index.html";
-      }
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      errorMessage.textContent = "";
-
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
+    async function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const msg = document.getElementById("msg");
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
         window.location.href = "index.html";
-      } catch (err) {
-        console.error(err);
-        if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
-          errorMessage.textContent = "Invalid email or password.";
-        } else if (err.code === "auth/too-many-requests") {
-          errorMessage.textContent = "Too many attempts. Try again later.";
-        } else {
-          errorMessage.textContent = "Login failed. Please try again.";
-        }
+      } catch (error) {
+        msg.textContent = error.message;
       }
-    });
+    }
+
+    window.login = login;
   </script>
 </body>
 </html>
