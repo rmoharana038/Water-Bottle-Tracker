@@ -32,6 +32,29 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// ✅ Make logout globally accessible
+window.logout = () => {
+  signOut(auth).then(() => {
+    window.location.href = "login.html";
+  }).catch((error) => {
+    console.error("Logout failed", error);
+    alert("Logout failed. Please try again.");
+  });
+};
+
+// ✅ Check auth before loading UI
+onAuthStateChanged(auth, async currentUser => {
+  if (!currentUser) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  // ✅ User is logged in — show page and continue
+  document.body.style.display = "block";
+  user = currentUser;
+  await loadEntries();
+});
+
 let user = null;
 let entries = [];
 let editingId = null;
@@ -66,15 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
   exportExcelBtn.addEventListener('click', exportToCSV);
   exportPDFBtn.addEventListener('click', exportToPDF);
   bottleInput.addEventListener('keypress', e => e.key === 'Enter' && addEntry());
-
-  onAuthStateChanged(auth, async currentUser => {
-    if (!currentUser) {
-      window.location.href = "login.html";
-      return;
-    }
-    user = currentUser;
-    await loadEntries();
-  });
 
   async function loadEntries() {
     try {
@@ -259,14 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => toast.classList.remove("show"), 3000);
   }
 
-  window.logout = () => {
-    signOut(auth).then(() => {
-      localStorage.removeItem("currentUser");
-      window.location.href = "login.html";
-    });
-  };
-
-  // PWA Service Worker
+  // Register Service Worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
       .then(r => console.log("Service Worker registered", r))
