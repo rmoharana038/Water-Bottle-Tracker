@@ -12,7 +12,6 @@ import {
   updateDoc,
   collection,
   query,
-  where,
   getDocs,
   addDoc,
   deleteDoc,
@@ -30,6 +29,7 @@ enableIndexedDbPersistence(db).catch(err => {
   console.warn("Offline persistence error:", err);
 });
 
+// DOM Elements
 const bottleInput = document.getElementById("bottleCount");
 const addBtn = document.getElementById("addEntry");
 const tableBody = document.getElementById("entryTableBody");
@@ -54,6 +54,7 @@ const profileForm = document.getElementById("profileForm");
 let currentUser = null;
 let editingId = null;
 
+// Auth state listener
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     location.href = "login.html";
@@ -65,10 +66,12 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+// Firestore collection path per user
 function getUserCollection() {
   return collection(db, "users", currentUser.uid, "entries");
 }
 
+// Load entries
 async function loadEntries() {
   const q = query(getUserCollection());
   const snapshot = await getDocs(q);
@@ -80,6 +83,7 @@ async function loadEntries() {
   updateStats(entries);
 }
 
+// Add entry
 async function addEntry() {
   const bottles = parseInt(bottleInput.value);
   if (!bottles || bottles <= 0) {
@@ -90,7 +94,7 @@ async function addEntry() {
   await addDoc(getUserCollection(), {
     date: now.toISOString().slice(0, 10),
     time: now.toTimeString().slice(0, 5),
-    bottles: bottles,
+    bottles,
     amount: bottles * 40,
     created: serverTimestamp()
   });
@@ -99,6 +103,7 @@ async function addEntry() {
   await loadEntries();
 }
 
+// Delete entry
 async function deleteEntry(id) {
   if (!confirm("Delete this entry?")) return;
   await deleteDoc(doc(db, "users", currentUser.uid, "entries", id));
@@ -106,6 +111,7 @@ async function deleteEntry(id) {
   await loadEntries();
 }
 
+// Edit entry
 function startEdit(id) {
   const row = document.getElementById(`row-${id}`);
   const date = row.dataset.date;
@@ -153,6 +159,7 @@ window.saveEdit = async (id) => {
   await loadEntries();
 };
 
+// Render entries
 function renderEntries(entries) {
   if (entries.length === 0) {
     entriesTable.style.display = "none";
@@ -186,6 +193,7 @@ function renderEntries(entries) {
   });
 }
 
+// Update stats
 function updateStats(entries) {
   const totalBottles = entries.reduce((sum, e) => sum + e.bottles, 0);
   const totalAmount = entries.reduce((sum, e) => sum + e.amount, 0);
@@ -196,6 +204,7 @@ function updateStats(entries) {
   totalEntriesElement.textContent = totalEntries;
 }
 
+// Clear all
 async function clearAll() {
   if (!confirm("Clear all entries?")) return;
   const q = query(getUserCollection());
@@ -206,12 +215,14 @@ async function clearAll() {
   await loadEntries();
 }
 
+// Update current month
 function updateCurrentMonth() {
   const now = new Date();
   const monthYear = now.toLocaleString("default", { month: "long", year: "numeric" });
   currentMonthElement.textContent = monthYear;
 }
 
+// Toast
 function showToast(msg) {
   toastMessage.textContent = msg;
   toast.classList.add("show");
@@ -230,19 +241,20 @@ window.logout = async function () {
   location.href = "login.html";
 };
 
-// PROFILE
+// Load profile
 async function loadProfile() {
   const ref = doc(db, "users", currentUser.uid);
   const snap = await getDoc(ref);
   const data = snap.data() || {};
-  dropdownName.textContent = data.firstName || currentUser.email;
-  profileName.textContent = data.firstName || "";
-  document.getElementById("profileFirstName").value = data.firstName || "";
-  document.getElementById("profileLastName").value = data.lastName || "";
+  dropdownName.textContent = data.fname || currentUser.email;
+  profileName.textContent = data.fname || "";
+  document.getElementById("profileFirstName").value = data.fname || "";
+  document.getElementById("profileLastName").value = data.lname || "";
   document.getElementById("profileEmail").value = currentUser.email || "";
   document.getElementById("profileMobile").value = data.mobile || "";
 }
 
+// Edit profile modal
 document.getElementById("editProfileBtn").addEventListener("click", () => {
   profileModal.classList.add("active");
 });
@@ -258,8 +270,8 @@ profileForm.addEventListener("submit", async (e) => {
   const mobile = document.getElementById("profileMobile").value;
 
   await setDoc(doc(db, "users", currentUser.uid), {
-    firstName,
-    lastName,
+    fname: firstName,
+    lname: lastName,
     mobile
   }, { merge: true });
 
