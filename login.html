@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Login - Water Tracker</title>
+  <title>Login / Signup - Water Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
@@ -25,35 +25,107 @@
       box-shadow: 0 5px 10px rgba(0,0,0,0.1);
       display: inline-block;
     }
+    .link-btn {
+      background: none;
+      border: none;
+      color: #3B82F6;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 14px;
+    }
+    .error { color: red; }
+    .success { color: green; }
   </style>
 </head>
 <body>
   <div class="login-card">
-    <h2>Login to Water Tracker</h2>
+    <h2 id="formTitle">Login</h2>
     <input type="email" id="email" placeholder="Email" /><br />
     <input type="password" id="password" placeholder="Password" /><br />
-    <button onclick="login()">Login</button>
-    <p id="msg" style="color:red;"></p>
+    <div id="confirmPassContainer" style="display: none;">
+      <input type="password" id="confirmPassword" placeholder="Confirm Password" /><br />
+    </div>
+    <button onclick="submitForm()" id="submitBtn">Login</button><br>
+    <button class="link-btn" onclick="toggleMode()">Switch to Signup</button><br>
+    <button class="link-btn" onclick="resetPassword()">Forgot Password?</button>
+    <p id="msg" class=""></p>
   </div>
 
   <script type="module">
     import { auth } from './firebase-init.js';
-    import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    async function login() {
+    let isLogin = true;
+
+    function toggleMode() {
+      isLogin = !isLogin;
+      document.getElementById("formTitle").textContent = isLogin ? "Login" : "Signup";
+      document.getElementById("submitBtn").textContent = isLogin ? "Login" : "Signup";
+      document.getElementById("confirmPassContainer").style.display = isLogin ? "none" : "block";
+      document.getElementById("msg").textContent = "";
+    }
+
+    async function submitForm() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
+      const confirmPassword = document.getElementById("confirmPassword")?.value.trim();
       const msg = document.getElementById("msg");
 
+      msg.className = "";
+      msg.textContent = "";
+
+      if (!email || !password || (!isLogin && !confirmPassword)) {
+        msg.className = "error";
+        msg.textContent = "Please fill all fields.";
+        return;
+      }
+
+      if (!isLogin && password !== confirmPassword) {
+        msg.className = "error";
+        msg.textContent = "Passwords do not match.";
+        return;
+      }
+
       try {
-        await signInWithEmailAndPassword(auth, email, password);
+        if (isLogin) {
+          await signInWithEmailAndPassword(auth, email, password);
+        } else {
+          await createUserWithEmailAndPassword(auth, email, password);
+        }
         window.location.href = "index.html";
       } catch (error) {
+        msg.className = "error";
         msg.textContent = error.message;
       }
     }
 
-    window.login = login;
+    async function resetPassword() {
+      const email = document.getElementById("email").value.trim();
+      const msg = document.getElementById("msg");
+
+      if (!email) {
+        msg.className = "error";
+        msg.textContent = "Please enter your email to reset password.";
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        msg.className = "success";
+        msg.textContent = "Password reset email sent!";
+      } catch (error) {
+        msg.className = "error";
+        msg.textContent = error.message;
+      }
+    }
+
+    window.toggleMode = toggleMode;
+    window.submitForm = submitForm;
+    window.resetPassword = resetPassword;
   </script>
 </body>
 </html>
