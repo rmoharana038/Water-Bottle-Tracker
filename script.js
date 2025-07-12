@@ -73,13 +73,11 @@ async function addEntry() {
   if (!bottles || bottles <= 0) return showToast('Enter valid number of bottles', 'error');
 
   const now = new Date();
-  const newEntry = {
-    uid: currentUser.uid,
-    date: now.toISOString().slice(0, 10),
-    time: now.toTimeString().slice(0, 5),
-    bottles,
-    amount: bottles * 40
-  };
+const newEntry = {
+  uid: currentUser.uid,
+  date: ...,
+  ...
+};
 
   const docRef = await addDoc(collection(db, 'entries'), newEntry);
   entries.push({ id: docRef.id, ...newEntry });
