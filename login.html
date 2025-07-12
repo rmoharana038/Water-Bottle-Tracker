@@ -6,12 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
   <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f1f5f9;
+    }
+
     .auth-container {
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background-color: #f1f5f9;
     }
 
     .auth-card {
@@ -89,33 +94,61 @@
       color: green;
       margin-top: 0.5rem;
     }
+
+    .fade-in {
+      animation: fadeSlideIn 0.4s ease forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .fade-out {
+      animation: fadeSlideOut 0.3s ease forwards;
+    }
+
+    @keyframes fadeSlideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeSlideOut {
+      to {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+    }
   </style>
 </head>
 <body>
   <div class="auth-container">
     <div class="auth-card">
-      <h2 id="formTitle">Login</h2>
+      <div class="form-wrapper fade-in" id="formWrapper">
+        <h2 id="formTitle">Login</h2>
 
-      <input type="email" id="email" placeholder="Email" />
+        <input type="email" id="email" placeholder="Email" />
 
-      <div class="input-wrapper">
-        <input type="password" id="password" placeholder="Password" />
-        <button type="button" onclick="togglePassword('password', this)">👁️</button>
-      </div>
-
-      <div id="confirmPassContainer" style="display: none;">
         <div class="input-wrapper">
-          <input type="password" id="confirmPassword" placeholder="Confirm Password" />
-          <button type="button" onclick="togglePassword('confirmPassword', this)">👁️</button>
+          <input type="password" id="password" placeholder="Password" />
+          <button type="button" onclick="togglePassword('password', this)">👁️</button>
         </div>
-      </div>
 
-      <button class="btn-primary" onclick="submitForm()" id="submitBtn">Login</button>
-      <div>
-        <button class="link-btn" onclick="toggleMode()" id="modeToggleBtn">Switch to Signup</button>
-        <button class="link-btn" onclick="resetPassword()">Forgot Password?</button>
+        <div id="confirmPassContainer" style="display: none;">
+          <div class="input-wrapper">
+            <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+            <button type="button" onclick="togglePassword('confirmPassword', this)">👁️</button>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="submitForm()" id="submitBtn">Login</button>
+
+        <div>
+          <button class="link-btn" onclick="toggleMode()" id="modeToggleBtn">Switch to Signup</button>
+          <button class="link-btn" onclick="resetPassword()">Forgot Password?</button>
+        </div>
+
+        <p id="msg"></p>
       </div>
-      <p id="msg"></p>
     </div>
   </div>
 
@@ -130,12 +163,22 @@
     let isLogin = true;
 
     window.toggleMode = function () {
-      isLogin = !isLogin;
-      document.getElementById("formTitle").textContent = isLogin ? "Login" : "Signup";
-      document.getElementById("submitBtn").textContent = isLogin ? "Login" : "Signup";
-      document.getElementById("confirmPassContainer").style.display = isLogin ? "none" : "block";
-      document.getElementById("modeToggleBtn").textContent = isLogin ? "Switch to Signup" : "Switch to Login";
-      document.getElementById("msg").textContent = "";
+      const wrapper = document.getElementById("formWrapper");
+      wrapper.classList.remove("fade-in");
+      wrapper.classList.add("fade-out");
+
+      setTimeout(() => {
+        isLogin = !isLogin;
+
+        document.getElementById("formTitle").textContent = isLogin ? "Login" : "Signup";
+        document.getElementById("submitBtn").textContent = isLogin ? "Login" : "Signup";
+        document.getElementById("confirmPassContainer").style.display = isLogin ? "none" : "block";
+        document.getElementById("modeToggleBtn").textContent = isLogin ? "Switch to Signup" : "Switch to Login";
+        document.getElementById("msg").textContent = "";
+
+        wrapper.classList.remove("fade-out");
+        wrapper.classList.add("fade-in");
+      }, 250);
     };
 
     window.submitForm = async function () {
