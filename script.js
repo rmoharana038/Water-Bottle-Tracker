@@ -1,11 +1,20 @@
-import { auth, db } from "./firebase-init.js";
+import { auth, db } from './firebase-init.js';
 import {
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  doc, getDoc, addDoc, updateDoc, deleteDoc,
-  collection, query, orderBy, onSnapshot, getDocs
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  onSnapshot,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // DOM Elements
@@ -24,13 +33,13 @@ const userName = document.getElementById('userName');
 const profileName = document.getElementById('profileName');
 const profileEmail = document.getElementById('profileEmail');
 const profileMobile = document.getElementById('profileMobile');
+const profileDropdown = document.getElementById('profileDropdown');
 
 let currentUser = null;
 let entryUnsubscribe = null;
 let currentEntries = [];
 let editingId = null;
 
-// Auth listener
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = 'login.html';
@@ -51,6 +60,9 @@ async function loadUserProfile() {
     profileName.textContent = `${d.firstName || ""} ${d.lastName || ""}`;
     profileEmail.textContent = d.email || currentUser.email;
     profileMobile.textContent = d.mobile || "Not set";
+  } else {
+    profileName.textContent = "User";
+    profileEmail.textContent = currentUser.email;
   }
 }
 
@@ -67,7 +79,6 @@ function setupEntryListener() {
   });
 }
 
-// Add Entry
 document.getElementById('addEntry').addEventListener('click', async () => {
   const bottles = parseInt(bottleInput.value);
   if (!bottles || bottles <= 0) {
@@ -88,7 +99,6 @@ document.getElementById('addEntry').addEventListener('click', async () => {
   showToast(`Added ${bottles} bottle${bottles > 1 ? 's' : ''}`, "success");
 });
 
-// Render Entries
 function renderEntries(entries) {
   if (entries.length === 0) {
     entriesTable.style.display = 'none';
@@ -116,7 +126,7 @@ function renderEntries(entries) {
         </td>
       `;
       setTimeout(() => {
-        document.getElementById('editBottles').addEventListener('input', function(e) {
+        document.getElementById('editBottles').addEventListener('input', function (e) {
           const amt = (parseInt(e.target.value) || 0) * 40;
           document.getElementById('editAmount').textContent = `₹${amt}`;
         });
@@ -139,14 +149,12 @@ function renderEntries(entries) {
   });
 }
 
-// Edit
-window.startEdit = function(id) {
+window.startEdit = function (id) {
   editingId = id;
   renderEntries(currentEntries);
 };
 
-// Save Edit
-window.saveEdit = async function(id) {
+window.saveEdit = async function (id) {
   const newDate = document.getElementById('editDate').value;
   const newTime = document.getElementById('editTime').value;
   const newBottles = parseInt(document.getElementById('editBottles').value);
@@ -167,20 +175,17 @@ window.saveEdit = async function(id) {
   showToast("Entry updated", "success");
 };
 
-// Cancel Edit
-window.cancelEdit = function() {
+window.cancelEdit = function () {
   editingId = null;
   renderEntries(currentEntries);
 };
 
-// Delete Entry
-window.deleteEntry = async function(id) {
+window.deleteEntry = async function (id) {
   if (!confirm("Delete this entry?")) return;
   await deleteDoc(doc(db, "entries", currentUser.uid, "data", id));
   showToast("Entry deleted", "success");
 };
 
-// Export CSV
 document.getElementById('exportExcel').addEventListener('click', async () => {
   const q = query(collection(db, "entries", currentUser.uid, "data"), orderBy("timestamp"));
   const snapshot = await getDocs(q);
@@ -211,12 +216,10 @@ document.getElementById('exportExcel').addEventListener('click', async () => {
   showToast("CSV downloaded!", "success");
 });
 
-// Export PDF (print)
 document.getElementById('exportPDF').addEventListener('click', () => {
   window.print();
 });
 
-// Clear All
 document.getElementById('clearAll').addEventListener('click', async () => {
   if (!confirm("Clear all entries?")) return;
   const q = query(collection(db, "entries", currentUser.uid, "data"));
@@ -226,13 +229,11 @@ document.getElementById('clearAll').addEventListener('click', async () => {
   showToast("All entries cleared!", "success");
 });
 
-// Logout
 window.logout = async () => {
   await signOut(auth);
   window.location.href = "login.html";
 };
 
-// Helpers
 function updateCurrentMonth() {
   const now = new Date();
   currentMonthElement.textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -263,4 +264,5 @@ function showToast(message, type = 'info') {
   toast.className = `toast show ${type}`;
   setTimeout(() => toast.classList.remove('show'), 3000);
 }
+
 toastClose.addEventListener('click', () => toast.classList.remove('show'));
