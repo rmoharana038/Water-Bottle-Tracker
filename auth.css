@@ -11,6 +11,8 @@
   margin-bottom: 20px;
   text-align: center;
   color: #1f2937;
+  font-size: 24px;
+  font-weight: 600;
 }
 
 .auth-container form {
@@ -24,6 +26,13 @@
   font-size: 16px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.auth-container input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .auth-container button {
@@ -34,6 +43,7 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 16px;
+  transition: background 0.3s ease;
 }
 
 .auth-container button:hover {
@@ -53,4 +63,27 @@
 
 .auth-container a:hover {
   text-decoration: underline;
+}
+
+/* Message Styling */
+.message {
+  font-size: 14px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.message.success {
+  color: green;
+}
+
+.message.error {
+  color: red;
+}
+
+/* Optional: smaller screen tweak */
+@media (max-width: 480px) {
+  .auth-container {
+    margin: 32px 16px;
+    padding: 24px;
+  }
 }
