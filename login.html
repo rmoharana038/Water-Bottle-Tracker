@@ -38,6 +38,22 @@
       font-size: 1rem;
     }
 
+    .auth-card .input-wrapper {
+      position: relative;
+    }
+
+    .auth-card .input-wrapper button {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: #3b82f6;
+    }
+
     .auth-card button.btn-primary {
       width: 100%;
       padding: 0.75rem;
@@ -70,14 +86,25 @@
   <div class="auth-container">
     <div class="auth-card">
       <h2 id="formTitle">Login</h2>
+
       <input type="email" id="email" placeholder="Email" />
-      <input type="password" id="password" placeholder="Password" />
-      <div id="confirmPassContainer" style="display: none;">
-        <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+
+      <div class="input-wrapper">
+        <input type="password" id="password" placeholder="Password" />
+        <button type="button" onclick="togglePassword('password')">👁️</button>
       </div>
+
+      <div id="confirmPassContainer" style="display: none;">
+        <div class="input-wrapper">
+          <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+          <button type="button" onclick="togglePassword('confirmPassword')">👁️</button>
+        </div>
+      </div>
+
       <button class="btn btn-primary" onclick="submitForm()" id="submitBtn">Login</button>
       <button class="link-btn" onclick="toggleMode()">Switch to Signup</button>
       <button class="link-btn" onclick="resetPassword()">Forgot Password?</button>
+
       <p id="msg" class=""></p>
     </div>
   </div>
@@ -157,6 +184,14 @@
     window.toggleMode = toggleMode;
     window.submitForm = submitForm;
     window.resetPassword = resetPassword;
+    window.togglePassword = function(fieldId) {
+      const input = document.getElementById(fieldId);
+      if (input.type === "password") {
+        input.type = "text";
+      } else {
+        input.type = "password";
+      }
+    };
   </script>
 </body>
 </html>
