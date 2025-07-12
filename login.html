@@ -7,6 +7,13 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="logo.png" />
   <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+
     .auth-container {
       max-width: 400px;
       margin: 60px auto;
@@ -69,6 +76,13 @@
       margin-top: -12px;
       margin-bottom: 12px;
     }
+
+    .error-message {
+      color: red;
+      text-align: center;
+      font-size: 14px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -81,10 +95,62 @@
         <a href="forgot.html">Forgot Password?</a>
       </div>
       <button type="submit">Login</button>
+      <div id="errorMessage" class="error-message"></div>
     </form>
     <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
   </div>
 
-  <script type="module" src="auth.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
+      authDomain: "water-bottle-tracker-43537.firebaseapp.com",
+      projectId: "water-bottle-tracker-43537",
+      storageBucket: "water-bottle-tracker-43537.appspot.com",
+      messagingSenderId: "424777349690",
+      appId: "1:424777349690:web:54056417c24cd2f0329303"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const form = document.getElementById("loginForm");
+    const errorMessage = document.getElementById("errorMessage");
+
+    // Auto-redirect if already logged in
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        window.location.href = "index.html";
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorMessage.textContent = "";
+
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = "index.html";
+      } catch (err) {
+        console.error(err);
+        if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+          errorMessage.textContent = "Invalid email or password.";
+        } else if (err.code === "auth/too-many-requests") {
+          errorMessage.textContent = "Too many attempts. Try again later.";
+        } else {
+          errorMessage.textContent = "Login failed. Please try again.";
+        }
+      }
+    });
+  </script>
 </body>
 </html>
