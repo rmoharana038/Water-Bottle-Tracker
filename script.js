@@ -36,52 +36,57 @@ let user = null;
 let entries = [];
 let editingId = null;
 
-window.addEventListener('DOMContentLoaded', () => {
-  const bottleInput = document.getElementById('bottleCount');
-  const addBtn = document.getElementById('addEntry');
-  const clearBtn = document.getElementById('clearAll');
-  const exportExcelBtn = document.getElementById('exportExcel');
-  const exportPDFBtn = document.getElementById('exportPDF');
-  const tableBody = document.getElementById('entryTableBody');
-  const entriesTable = document.getElementById('entriesTable');
-  const emptyState = document.getElementById('emptyState');
-  const totalBottlesElement = document.getElementById('totalBottles');
-  const totalAmountElement = document.getElementById('totalAmount');
-  const totalEntriesElement = document.getElementById('totalEntries');
-  const currentMonthElement = document.getElementById('currentMonth');
-  const toast = document.getElementById('toast');
-  const toastMessage = document.getElementById('toastMessage');
-  const toastClose = document.getElementById('toastClose');
+// Redirect to login if not authenticated
+onAuthStateChanged(auth, async (currentUser) => {
+  if (!currentUser) {
+    window.location.href = "login.html";
+    return;
+  }
+  user = currentUser;
+  await loadEntries();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const bottleInput = document.getElementById("bottleCount");
+  const addBtn = document.getElementById("addEntry");
+  const clearBtn = document.getElementById("clearAll");
+  const exportExcelBtn = document.getElementById("exportExcel");
+  const exportPDFBtn = document.getElementById("exportPDF");
+  const tableBody = document.getElementById("entryTableBody");
+  const entriesTable = document.getElementById("entriesTable");
+  const emptyState = document.getElementById("emptyState");
+  const totalBottlesElement = document.getElementById("totalBottles");
+  const totalAmountElement = document.getElementById("totalAmount");
+  const totalEntriesElement = document.getElementById("totalEntries");
+  const currentMonthElement = document.getElementById("currentMonth");
+  const toast = document.getElementById("toast");
+  const toastMessage = document.getElementById("toastMessage");
+  const toastClose = document.getElementById("toastClose");
 
   function updateCurrentMonth() {
     const now = new Date();
-    currentMonthElement.textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+    currentMonthElement.textContent = now.toLocaleString("default", {
+      month: "long",
+      year: "numeric",
+    });
   }
 
   updateCurrentMonth();
-  toastClose.addEventListener('click', () => toast.classList.remove('show'));
 
-  addBtn.addEventListener('click', addEntry);
-  clearBtn.addEventListener('click', clearAllEntries);
-  exportExcelBtn.addEventListener('click', exportToCSV);
-  exportPDFBtn.addEventListener('click', exportToPDF);
-  bottleInput.addEventListener('keypress', e => e.key === 'Enter' && addEntry());
+  toastClose.addEventListener("click", () => toast.classList.remove("show"));
 
-  onAuthStateChanged(auth, async currentUser => {
-    if (!currentUser) {
-      window.location.href = "login.html";
-      return;
-    }
-    user = currentUser;
-    await loadEntries();
-  });
+  addBtn.addEventListener("click", addEntry);
+  clearBtn.addEventListener("click", clearAllEntries);
+  exportExcelBtn.addEventListener("click", exportToCSV);
+  exportPDFBtn.addEventListener("click", exportToPDF);
+  bottleInput.addEventListener("keypress", (e) => e.key === "Enter" && addEntry());
 
   async function loadEntries() {
     try {
       entries = [];
       const q = query(collection(db, "entries"), where("uid", "==", user.uid));
       const snapshot = await getDocs(q);
-      snapshot.forEach(docSnap => {
+      snapshot.forEach((docSnap) => {
         entries.push({ id: docSnap.id, ...docSnap.data() });
       });
       renderEntries();
@@ -102,16 +107,16 @@ window.addEventListener('DOMContentLoaded', () => {
       date: now.toISOString().slice(0, 10),
       time: now.toTimeString().slice(0, 5),
       bottles,
-      amount: bottles * 40
+      amount: bottles * 40,
     };
 
     try {
       const docRef = await addDoc(collection(db, "entries"), entry);
       entries.push({ id: docRef.id, ...entry });
-      bottleInput.value = '';
+      bottleInput.value = "";
       renderEntries();
       updateStats();
-      showToast(`Added ${bottles} bottle${bottles > 1 ? 's' : ''}`, 'success');
+      showToast(`Added ${bottles} bottle${bottles > 1 ? "s" : ""}`, "success");
     } catch (err) {
       console.error(err);
       showToast("Failed to add entry", "error");
@@ -120,8 +125,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   window.startEdit = function (id) {
     editingId = id;
-    const entry = entries.find(e => e.id === id);
-    const index = entries.findIndex(e => e.id === id);
+    const entry = entries.find((e) => e.id === id);
+    const index = entries.findIndex((e) => e.id === id);
     const row = tableBody.children[index];
     row.innerHTML = `
       <td>${index + 1}</td>
@@ -134,16 +139,16 @@ window.addEventListener('DOMContentLoaded', () => {
         <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
       </td>
     `;
-    document.getElementById('editBottles').addEventListener('input', e => {
+    document.getElementById("editBottles").addEventListener("input", (e) => {
       const amount = parseInt(e.target.value || 0) * 40;
-      document.getElementById('editAmount').textContent = `₹${amount}`;
+      document.getElementById("editAmount").textContent = `₹${amount}`;
     });
   };
 
   window.saveEdit = async function () {
-    const newDate = document.getElementById('editDate').value;
-    const newTime = document.getElementById('editTime').value;
-    const newBottles = parseInt(document.getElementById('editBottles').value);
+    const newDate = document.getElementById("editDate").value;
+    const newTime = document.getElementById("editTime").value;
+    const newBottles = parseInt(document.getElementById("editBottles").value);
 
     if (!newDate || !newTime || !newBottles || newBottles <= 0)
       return showToast("Fill all fields correctly", "error");
@@ -152,13 +157,13 @@ window.addEventListener('DOMContentLoaded', () => {
       date: newDate,
       time: newTime,
       bottles: newBottles,
-      amount: newBottles * 40
+      amount: newBottles * 40,
     };
 
     try {
       const ref = doc(db, "entries", editingId);
       await updateDoc(ref, updated);
-      const index = entries.findIndex(e => e.id === editingId);
+      const index = entries.findIndex((e) => e.id === editingId);
       entries[index] = { ...entries[index], ...updated };
       editingId = null;
       renderEntries();
@@ -180,7 +185,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     try {
       await deleteDoc(doc(db, "entries", id));
-      entries = entries.filter(e => e.id !== id);
+      entries = entries.filter((e) => e.id !== id);
       renderEntries();
       updateStats();
       showToast("Entry deleted", "success");
@@ -194,7 +199,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!confirm("Clear all entries? This cannot be undone.")) return;
 
     try {
-      const promises = entries.map(e => deleteDoc(doc(db, "entries", e.id)));
+      const promises = entries.map((e) => deleteDoc(doc(db, "entries", e.id)));
       await Promise.all(promises);
       entries = [];
       renderEntries();
@@ -208,16 +213,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function renderEntries() {
     if (entries.length === 0) {
-      entriesTable.style.display = 'none';
-      emptyState.style.display = 'block';
+      entriesTable.style.display = "none";
+      emptyState.style.display = "block";
       return;
     }
 
-    entriesTable.style.display = 'table';
-    emptyState.style.display = 'none';
-    tableBody.innerHTML = '';
+    entriesTable.style.display = "table";
+    emptyState.style.display = "none";
+    tableBody.innerHTML = "";
     entries.forEach((e, i) => {
-      const row = document.createElement('tr');
+      const row = document.createElement("tr");
       row.innerHTML = `
         <td>${i + 1}</td>
         <td>${formatDateDisplay(e.date)}</td>
@@ -243,14 +248,21 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function formatDateDisplay(dateStr) {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    return date.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   }
 
   function formatTimeDisplay(timeStr) {
-    const [h, m] = timeStr.split(':');
+    const [h, m] = timeStr.split(":");
     const date = new Date();
     date.setHours(h, m);
-    return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   function showToast(msg, type = "info") {
@@ -261,14 +273,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
   window.logout = () => {
     signOut(auth).then(() => {
-      localStorage.removeItem("currentUser");
       window.location.href = "login.html";
     });
   };
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(r => console.log("Service Worker registered", r))
-      .catch(err => console.error("SW registration failed", err));
+  // PWA Service Worker
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker
+      .register("./sw.js")
+      .then((r) => console.log("Service Worker registered", r))
+      .catch((err) => console.error("SW registration failed", err));
   }
 });
