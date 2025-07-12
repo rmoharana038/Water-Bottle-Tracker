@@ -77,15 +77,19 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   async function loadEntries() {
-    entries = [];
-    const q = query(collection(db, "entries"), where("uid", "==", user.uid));
-    const snapshot = await getDocs(q);
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      entries.push({ id: docSnap.id, ...data });
-    });
-    renderEntries();
-    updateStats();
+    try {
+      entries = [];
+      const q = query(collection(db, "entries"), where("uid", "==", user.uid));
+      const snapshot = await getDocs(q);
+      snapshot.forEach(docSnap => {
+        entries.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      renderEntries();
+      updateStats();
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to load data", "error");
+    }
   }
 
   async function addEntry() {
@@ -101,13 +105,17 @@ document.addEventListener('DOMContentLoaded', () => {
       amount: bottles * 40
     };
 
-    const docRef = await addDoc(collection(db, "entries"), entry);
-    entries.push({ id: docRef.id, ...entry });
-
-    bottleInput.value = '';
-    renderEntries();
-    updateStats();
-    showToast(`Added ${bottles} bottle${bottles > 1 ? 's' : ''} successfully`, 'success');
+    try {
+      const docRef = await addDoc(collection(db, "entries"), entry);
+      entries.push({ id: docRef.id, ...entry });
+      bottleInput.value = '';
+      renderEntries();
+      updateStats();
+      showToast(`Added ${bottles} bottle${bottles > 1 ? 's' : ''}`, 'success');
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to add entry", "error");
+    }
   }
 
   window.startEdit = function (id) {
@@ -147,15 +155,19 @@ document.addEventListener('DOMContentLoaded', () => {
       amount: newBottles * 40
     };
 
-    const ref = doc(db, "entries", editingId);
-    await updateDoc(ref, updated);
-
-    const index = entries.findIndex(e => e.id === editingId);
-    entries[index] = { ...entries[index], ...updated };
-    editingId = null;
-    renderEntries();
-    updateStats();
-    showToast("Entry updated successfully", "success");
+    try {
+      const ref = doc(db, "entries", editingId);
+      await updateDoc(ref, updated);
+      const index = entries.findIndex(e => e.id === editingId);
+      entries[index] = { ...entries[index], ...updated };
+      editingId = null;
+      renderEntries();
+      updateStats();
+      showToast("Entry updated", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("Update failed", "error");
+    }
   };
 
   window.cancelEdit = () => {
@@ -164,23 +176,33 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.deleteEntry = async function (id) {
-    if (confirm("Delete this entry?")) {
+    if (!confirm("Delete this entry?")) return;
+
+    try {
       await deleteDoc(doc(db, "entries", id));
       entries = entries.filter(e => e.id !== id);
       renderEntries();
       updateStats();
       showToast("Entry deleted", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to delete", "error");
     }
   };
 
   async function clearAllEntries() {
-    if (confirm("Clear all entries? This cannot be undone.")) {
+    if (!confirm("Clear all entries? This cannot be undone.")) return;
+
+    try {
       const promises = entries.map(e => deleteDoc(doc(db, "entries", e.id)));
       await Promise.all(promises);
       entries = [];
       renderEntries();
       updateStats();
       showToast("All entries cleared", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("Clear failed", "error");
     }
   }
 
@@ -244,11 +266,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
+  // PWA Service Worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(r => {
-      console.log("SW registered:", r);
-    }).catch(err => {
-      console.error("SW registration failed:", err);
-    });
+    navigator.serviceWorker.register('./sw.js')
+      .then(r => console.log("Service Worker registered", r))
+      .catch(err => console.error("SW registration failed", err));
   }
 });
