@@ -1,4 +1,5 @@
-// Firebase Imports
+// script.js (Final Fixed Version)
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {
   getFirestore,
@@ -17,15 +18,13 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
   authDomain: "water-bottle-tracker-43537.firebaseapp.com",
   projectId: "water-bottle-tracker-43537",
   storageBucket: "water-bottle-tracker-43537.appspot.com",
   messagingSenderId: "424777349690",
-  appId: "1:424777349690:web:54056417c24cd2f0329303",
-  measurementId: "G-ZKGP7LC80E"
+  appId: "1:424777349690:web:54056417c24cd2f0329303"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -36,14 +35,13 @@ let user = null;
 let entries = [];
 let editingId = null;
 
-// Redirect to login if not authenticated
 onAuthStateChanged(auth, async (currentUser) => {
   if (!currentUser) {
     window.location.href = "login.html";
-    return;
+  } else {
+    user = currentUser;
+    await loadEntries();
   }
-  user = currentUser;
-  await loadEntries();
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -63,23 +61,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const toastMessage = document.getElementById("toastMessage");
   const toastClose = document.getElementById("toastClose");
 
-  function updateCurrentMonth() {
-    const now = new Date();
-    currentMonthElement.textContent = now.toLocaleString("default", {
-      month: "long",
-      year: "numeric",
-    });
-  }
-
   updateCurrentMonth();
-
   toastClose.addEventListener("click", () => toast.classList.remove("show"));
-
   addBtn.addEventListener("click", addEntry);
   clearBtn.addEventListener("click", clearAllEntries);
   exportExcelBtn.addEventListener("click", exportToCSV);
   exportPDFBtn.addEventListener("click", exportToPDF);
   bottleInput.addEventListener("keypress", (e) => e.key === "Enter" && addEntry());
+
+  function updateCurrentMonth() {
+    const now = new Date();
+    currentMonthElement.textContent = now.toLocaleString("default", {
+      month: "long",
+      year: "numeric"
+    });
+  }
 
   async function loadEntries() {
     try {
@@ -107,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
       date: now.toISOString().slice(0, 10),
       time: now.toTimeString().slice(0, 5),
       bottles,
-      amount: bottles * 40,
+      amount: bottles * 40
     };
 
     try {
@@ -135,17 +131,19 @@ document.addEventListener("DOMContentLoaded", () => {
       <td><input type="number" class="edit-input" id="editBottles" value="${entry.bottles}" min="1"></td>
       <td id="editAmount">₹${entry.amount}</td>
       <td class="actions">
-        <button class="save-btn" onclick="saveEdit()">Save</button>
-        <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
+        <button class="save-btn" id="saveEditBtn">Save</button>
+        <button class="cancel-btn" id="cancelEditBtn">Cancel</button>
       </td>
     `;
     document.getElementById("editBottles").addEventListener("input", (e) => {
       const amount = parseInt(e.target.value || 0) * 40;
       document.getElementById("editAmount").textContent = `₹${amount}`;
     });
+    document.getElementById("saveEditBtn").addEventListener("click", saveEdit);
+    document.getElementById("cancelEditBtn").addEventListener("click", cancelEdit);
   };
 
-  window.saveEdit = async function () {
+  async function saveEdit() {
     const newDate = document.getElementById("editDate").value;
     const newTime = document.getElementById("editTime").value;
     const newBottles = parseInt(document.getElementById("editBottles").value);
@@ -157,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
       date: newDate,
       time: newTime,
       bottles: newBottles,
-      amount: newBottles * 40,
+      amount: newBottles * 40
     };
 
     try {
@@ -173,12 +171,12 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error(err);
       showToast("Update failed", "error");
     }
-  };
+  }
 
-  window.cancelEdit = () => {
+  function cancelEdit() {
     editingId = null;
     renderEntries();
-  };
+  }
 
   window.deleteEntry = async function (id) {
     if (!confirm("Delete this entry?")) return;
@@ -251,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return date.toLocaleDateString("en-IN", {
       day: "numeric",
       month: "short",
-      year: "numeric",
+      year: "numeric"
     });
   }
 
@@ -261,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
     date.setHours(h, m);
     return date.toLocaleTimeString("en-IN", {
       hour: "2-digit",
-      minute: "2-digit",
+      minute: "2-digit"
     });
   }
 
@@ -271,13 +269,18 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => toast.classList.remove("show"), 3000);
   }
 
-  window.logout = () => {
-    signOut(auth).then(() => {
-      window.location.href = "login.html";
-    });
-  };
+  document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    signOut(auth)
+      .then(() => {
+        localStorage.removeItem("currentUser");
+        window.location.href = "login.html";
+      })
+      .catch((error) => {
+        showToast("Logout error", "error");
+        console.error(error);
+      });
+  });
 
-  // PWA Service Worker
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("./sw.js")
