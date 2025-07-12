@@ -3,116 +3,141 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login | Water Tracker</title>
+  <title>Login - Water Tracker</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="auth-container">
-    <div class="auth-card">
+  <div class="login-container">
+    <div class="form-card">
       <h2 id="formTitle">Login</h2>
-      <form id="authForm">
-        <div id="signupFields" style="display: none;">
-          <input type="text" id="firstName" placeholder="First Name" required />
-          <input type="text" id="lastName" placeholder="Last Name" required />
-          <input type="tel" id="mobile" placeholder="Mobile Number" required />
+
+      <div id="nameFields" style="display: none;">
+        <div class="input-group">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" placeholder="John"/>
         </div>
-        <input type="email" id="email" placeholder="Email" required />
-        <div class="password-wrapper">
-          <input type="password" id="password" placeholder="Password" required />
-          <input type="checkbox" id="showPassword"> <label for="showPassword">Show</label>
+        <div class="input-group">
+          <label for="lastName">Last Name</label>
+          <input type="text" id="lastName" placeholder="Doe"/>
         </div>
-        <button type="submit" class="btn btn-primary" id="submitBtn">Login</button>
-        <p id="toggleText">Don't have an account? <a href="#" id="toggleForm">Signup</a></p>
-        <p><a href="#" id="resetPassword">Forgot Password?</a></p>
-      </form>
+        <div class="input-group">
+          <label for="mobile">Mobile Number</label>
+          <input type="tel" id="mobile" placeholder="9876543210"/>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="email">Email ID</label>
+        <input type="email" id="email" placeholder="example@mail.com"/>
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="********"/>
+        <label><input type="checkbox" id="showPassword" /> Show Password</label>
+      </div>
+
+      <button class="btn btn-primary" id="submitBtn">Login</button>
+      <p style="margin-top: 1rem; text-align: center;">
+        <a href="#" id="toggleLink">Switch to Signup</a>
+        <br />
+        <a href="#" id="resetPasswordLink">Forgot Password?</a>
+      </p>
     </div>
-  </main>
+  </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { auth, db } from './firebase-init.js';
+    import { 
+      signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword, 
+      sendPasswordResetEmail 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
-      authDomain: "water-bottle-tracker-43537.firebaseapp.com",
-      projectId: "water-bottle-tracker-43537",
-      storageBucket: "water-bottle-tracker-43537.appspot.com",
-      messagingSenderId: "424777349690",
-      appId: "1:424777349690:web:54056417c24cd2f0329303"
-    };
+    const isLogin = { mode: true };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const submitBtn = document.getElementById("submitBtn");
+    const toggleLink = document.getElementById("toggleLink");
+    const resetPasswordLink = document.getElementById("resetPasswordLink");
+    const showPassword = document.getElementById("showPassword");
 
-    const authForm = document.getElementById('authForm');
-    const formTitle = document.getElementById('formTitle');
-    const submitBtn = document.getElementById('submitBtn');
-    const toggleForm = document.getElementById('toggleForm');
-    const toggleText = document.getElementById('toggleText');
-    const signupFields = document.getElementById('signupFields');
-    const showPassword = document.getElementById('showPassword');
-    const resetPassword = document.getElementById('resetPassword');
+    const formTitle = document.getElementById("formTitle");
+    const nameFields = document.getElementById("nameFields");
+    const firstName = document.getElementById("firstName");
+    const lastName = document.getElementById("lastName");
+    const mobile = document.getElementById("mobile");
 
-    let isSignup = false;
-
-    toggleForm.addEventListener('click', (e) => {
-      e.preventDefault();
-      isSignup = !isSignup;
-      formTitle.textContent = isSignup ? "Signup" : "Login";
-      submitBtn.textContent = isSignup ? "Signup" : "Login";
-      toggleText.innerHTML = isSignup
-        ? `Already have an account? <a href="#" id="toggleForm">Login</a>`
-        : `Don't have an account? <a href="#" id="toggleForm">Signup</a>`;
-      signupFields.style.display = isSignup ? "block" : "none";
+    toggleLink.addEventListener("click", () => {
+      isLogin.mode = !isLogin.mode;
+      if (isLogin.mode) {
+        formTitle.innerText = "Login";
+        submitBtn.innerText = "Login";
+        toggleLink.innerText = "Switch to Signup";
+        nameFields.style.display = "none";
+      } else {
+        formTitle.innerText = "Signup";
+        submitBtn.innerText = "Signup";
+        toggleLink.innerText = "Switch to Login";
+        nameFields.style.display = "block";
+      }
     });
 
-    authForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+    showPassword.addEventListener("change", () => {
+      password.type = showPassword.checked ? "text" : "password";
+    });
 
-      if (isSignup) {
-        const firstName = document.getElementById('firstName').value.trim();
-        const lastName = document.getElementById('lastName').value.trim();
-        const mobile = document.getElementById('mobile').value.trim();
+    resetPasswordLink.addEventListener("click", async () => {
+      if (!email.value) {
+        alert("Please enter your email to reset password.");
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email.value);
+        alert("Password reset link sent to your email.");
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    });
+
+    submitBtn.addEventListener("click", async () => {
+      const emailVal = email.value.trim();
+      const passwordVal = password.value.trim();
+
+      if (!emailVal || !passwordVal) return alert("Fill in all required fields");
+
+      if (isLogin.mode) {
+        // Login
         try {
-          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          await setDoc(doc(db, "users", userCredential.user.uid), {
-            firstName,
-            lastName,
-            email,
-            mobile
-          });
-          window.location.href = "index.html";
-        } catch (error) {
-          alert(error.message);
-        }
-      } else {
-        try {
-          await signInWithEmailAndPassword(auth, email, password);
+          await signInWithEmailAndPassword(auth, emailVal, passwordVal);
           window.location.href = "index.html";
         } catch (error) {
           alert("Login failed: " + error.message);
         }
-      }
-    });
+      } else {
+        // Signup
+        const first = firstName.value.trim();
+        const last = lastName.value.trim();
+        const phone = mobile.value.trim();
+        if (!first || !last || !phone) return alert("Please fill in all profile fields");
 
-    showPassword.addEventListener('change', () => {
-      const pwd = document.getElementById('password');
-      pwd.type = showPassword.checked ? 'text' : 'password';
-    });
-
-    resetPassword.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const email = prompt("Enter your email to reset password:");
-      if (email) {
         try {
-          await sendPasswordResetEmail(auth, email);
-          alert("Password reset link sent to your email.");
+          const userCredential = await createUserWithEmailAndPassword(auth, emailVal, passwordVal);
+          const uid = userCredential.user.uid;
+
+          await setDoc(doc(db, "users", uid), {
+            firstName: first,
+            lastName: last,
+            email: emailVal,
+            mobile: phone,
+            createdAt: new Date().toISOString()
+          });
+
+          window.location.href = "index.html";
         } catch (error) {
-          alert("Error: " + error.message);
+          alert("Signup failed: " + error.message);
         }
       }
     });
