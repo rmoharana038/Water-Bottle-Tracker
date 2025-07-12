@@ -1,33 +1,12 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { auth, db } from "./firebase-init.js";
 import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-  getDocs
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  doc, getDoc, addDoc, updateDoc, deleteDoc,
+  collection, query, orderBy, onSnapshot, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
-  authDomain: "water-bottle-tracker-43537.firebaseapp.com",
-  projectId: "water-bottle-tracker-43537",
-  storageBucket: "water-bottle-tracker-43537.appspot.com",
-  messagingSenderId: "424777349690",
-  appId: "1:424777349690:web:54056417c24cd2f0329303"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 
 // DOM Elements
 const totalBottlesElement = document.getElementById('totalBottles');
@@ -132,8 +111,8 @@ function renderEntries(entries) {
         <td><input type="number" id="editBottles" value="${entry.bottles}" min="1"></td>
         <td id="editAmount">₹${entry.amount}</td>
         <td class="actions">
-          <button onclick="saveEdit('${entry.id}')">Save</button>
-          <button onclick="cancelEdit()">Cancel</button>
+          <button class="save-btn" onclick="saveEdit('${entry.id}')">Save</button>
+          <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
         </td>
       `;
       setTimeout(() => {
@@ -150,8 +129,8 @@ function renderEntries(entries) {
         <td>${entry.bottles}</td>
         <td>₹${entry.amount}</td>
         <td class="actions">
-          <button onclick="startEdit('${entry.id}')">Edit</button>
-          <button onclick="deleteEntry('${entry.id}')">Delete</button>
+          <button class="edit-btn" onclick="startEdit('${entry.id}')">Edit</button>
+          <button class="delete-btn" onclick="deleteEntry('${entry.id}')">Delete</button>
         </td>
       `;
     }
@@ -232,7 +211,7 @@ document.getElementById('exportExcel').addEventListener('click', async () => {
   showToast("CSV downloaded!", "success");
 });
 
-// Export PDF (print-friendly)
+// Export PDF (print)
 document.getElementById('exportPDF').addEventListener('click', () => {
   window.print();
 });
@@ -258,6 +237,7 @@ function updateCurrentMonth() {
   const now = new Date();
   currentMonthElement.textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
 }
+
 function updateStats(entries) {
   const totalBottles = entries.reduce((sum, e) => sum + e.bottles, 0);
   const totalAmount = entries.reduce((sum, e) => sum + e.amount, 0);
@@ -265,16 +245,19 @@ function updateStats(entries) {
   totalAmountElement.textContent = `₹${totalAmount}`;
   totalEntriesElement.textContent = entries.length;
 }
+
 function formatDateDisplay(dateStr) {
   const date = new Date(dateStr);
   return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
 }
+
 function formatTimeDisplay(timeStr) {
   const [hours, minutes] = timeStr.split(":");
   const date = new Date();
   date.setHours(hours, minutes);
   return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 }
+
 function showToast(message, type = 'info') {
   toastMessage.textContent = message;
   toast.className = `toast show ${type}`;
