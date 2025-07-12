@@ -120,8 +120,19 @@
     </div>
   </noscript>
 
-  <!-- Firebase Auth Check & App Logic -->
-  <script type="module" src="firebase-init.js"></script>
-<script type="module" src="script.js"></script>
+  <!-- Firebase Auth Check -->
+  <script type="module">
+    import { auth } from './firebase-init.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+
+  <!-- App Logic -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
