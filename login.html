@@ -30,8 +30,17 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
@@ -66,7 +75,14 @@
         ? `Already have an account? <a href="#" id="toggleForm">Login</a>`
         : `Don't have an account? <a href="#" id="toggleForm">Signup</a>`;
       signupFields.style.display = isSignup ? "block" : "none";
+      // Re-bind toggleForm event
+      document.getElementById('toggleForm').addEventListener('click', toggleFormClick);
     });
+
+    function toggleFormClick(e) {
+      e.preventDefault();
+      toggleForm.click();
+    }
 
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
