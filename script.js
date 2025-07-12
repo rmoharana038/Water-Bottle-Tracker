@@ -1,12 +1,20 @@
-// Water Bottle Tracker JavaScript (with Firebase Auth protection)
-
+// Import Firebase Auth
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-// Redirect to login.html if not authenticated
 const auth = getAuth();
+let currentUserEmail = null;
+let entries = [];
+let editingId = null;
+
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "login.html";
+  } else {
+    currentUserEmail = user.email;
+    loadEntries();
+    updateCurrentMonth();
+    renderEntries();
+    updateStats();
   }
 });
 
@@ -19,7 +27,6 @@ window.logout = function () {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
-  // DOM Elements
   const bottleInput = document.getElementById('bottleCount');
   const addBtn = document.getElementById('addEntry');
   const clearBtn = document.getElementById('clearAll');
@@ -36,13 +43,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const toastMessage = document.getElementById('toastMessage');
   const toastClose = document.getElementById('toastClose');
 
-  let entries = JSON.parse(localStorage.getItem('water_entries')) || [];
-  let editingId = null;
-
-  updateCurrentMonth();
-  renderEntries();
-  updateStats();
-
   addBtn.addEventListener('click', addEntry);
   clearBtn.addEventListener('click', confirmClearAll);
   exportExcelBtn.addEventListener('click', exportToCSV);
@@ -50,10 +50,21 @@ document.addEventListener('DOMContentLoaded', function () {
   toastClose.addEventListener('click', hideToast);
 
   bottleInput.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-      addEntry();
-    }
+    if (e.key === 'Enter') addEntry();
   });
+
+  function getStorageKey() {
+    return `water_entries_${currentUserEmail}`;
+  }
+
+  function loadEntries() {
+    const raw = localStorage.getItem(getStorageKey());
+    entries = raw ? JSON.parse(raw) : [];
+  }
+
+  function saveEntries() {
+    localStorage.setItem(getStorageKey(), JSON.stringify(entries));
+  }
 
   function updateCurrentMonth() {
     const now = new Date();
@@ -73,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
       id: Date.now().toString(),
       date: now.toISOString().slice(0, 10),
       time: now.toTimeString().slice(0, 5),
-      bottles: bottles,
+      bottles,
       amount: bottles * 40
     };
 
@@ -82,10 +93,11 @@ document.addEventListener('DOMContentLoaded', function () {
     renderEntries();
     updateStats();
     bottleInput.value = '';
-    showToast(`Added ${bottles} bottle${bottles > 1 ? 's' : ''} successfully!`, 'success');
+    showToast(`Added ${bottles} bottle${bottles > 1 ? 's' : ''}!`, 'success');
   }
 
   function renderEntries() {
+    tableBody.innerHTML = '';
     if (entries.length === 0) {
       entriesTable.style.display = 'none';
       emptyState.style.display = 'block';
@@ -94,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     entriesTable.style.display = 'table';
     emptyState.style.display = 'none';
-    tableBody.innerHTML = '';
 
     entries.forEach((entry, index) => {
       const row = document.createElement('tr');
@@ -107,8 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <td class="actions">
           <button class="edit-btn" onclick="startEdit('${entry.id}')">Edit</button>
           <button class="delete-btn" onclick="deleteEntry('${entry.id}')">Delete</button>
-        </td>
-      `;
+        </td>`;
       tableBody.appendChild(row);
     });
   }
@@ -122,20 +132,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     row.innerHTML = `
       <td>${index + 1}</td>
-      <td><input type="date" class="edit-input" id="editDate" value="${entry.date}"></td>
-      <td><input type="time" class="edit-input" id="editTime" value="${entry.time}"></td>
-      <td><input type="number" class="edit-input" id="editBottles" value="${entry.bottles}" min="1"></td>
+      <td><input type="date" id="editDate" value="${entry.date}"></td>
+      <td><input type="time" id="editTime" value="${entry.time}"></td>
+      <td><input type="number" id="editBottles" value="${entry.bottles}" min="1"></td>
       <td id="editAmount">₹${entry.amount}</td>
       <td class="actions">
-        <button class="save-btn" onclick="saveEdit()">Save</button>
-        <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
-      </td>
-    `;
+        <button onclick="saveEdit()">Save</button>
+        <button onclick="cancelEdit()">Cancel</button>
+      </td>`;
 
     document.getElementById('editBottles').addEventListener('input', function (e) {
       const bottles = parseInt(e.target.value) || 0;
-      const amount = bottles * 40;
-      document.getElementById('editAmount').textContent = `₹${amount}`;
+      document.getElementById('editAmount').textContent = `₹${bottles * 40}`;
     });
   };
 
@@ -149,10 +157,10 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    const entryIndex = entries.findIndex(e => e.id === editingId);
-    if (entryIndex !== -1) {
-      entries[entryIndex] = {
-        ...entries[entryIndex],
+    const index = entries.findIndex(e => e.id === editingId);
+    if (index !== -1) {
+      entries[index] = {
+        ...entries[index],
         date: newDate,
         time: newTime,
         bottles: newBottles,
@@ -164,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
     saveEntries();
     renderEntries();
     updateStats();
-    showToast('Entry updated successfully!', 'success');
+    showToast('Entry updated!', 'success');
   };
 
   window.cancelEdit = function () {
@@ -173,28 +181,28 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   window.deleteEntry = function (id) {
-    if (confirm('Are you sure you want to delete this entry?')) {
+    if (confirm('Delete this entry?')) {
       entries = entries.filter(e => e.id !== id);
       saveEntries();
       renderEntries();
       updateStats();
-      showToast('Entry deleted successfully!', 'success');
+      showToast('Entry deleted!', 'success');
     }
   };
 
   function confirmClearAll() {
-    if (confirm('Are you sure you want to clear all entries? This action cannot be undone.')) {
+    if (confirm('Clear all entries? This cannot be undone.')) {
       entries = [];
       saveEntries();
       renderEntries();
       updateStats();
-      showToast('All entries cleared successfully!', 'success');
+      showToast('All entries cleared!', 'success');
     }
   }
 
   function updateStats() {
-    const totalBottles = entries.reduce((sum, entry) => sum + entry.bottles, 0);
-    const totalAmount = entries.reduce((sum, entry) => sum + entry.amount, 0);
+    const totalBottles = entries.reduce((sum, e) => sum + e.bottles, 0);
+    const totalAmount = entries.reduce((sum, e) => sum + e.amount, 0);
     const totalEntries = entries.length;
 
     totalBottlesElement.textContent = totalBottles;
@@ -202,134 +210,67 @@ document.addEventListener('DOMContentLoaded', function () {
     totalEntriesElement.textContent = totalEntries;
   }
 
-  function saveEntries() {
-    localStorage.setItem('water_entries', JSON.stringify(entries));
-  }
-
   function exportToCSV() {
-    if (entries.length === 0) {
-      showToast('No entries to export', 'error');
-      return;
-    }
+    if (!entries.length) return showToast('No entries to export', 'error');
 
-    const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-    let csv = `Water Bottle Tracker\n${currentMonth}\n\n`;
-    csv += 'Index,Date,Time,Bottles (20L),Amount (₹)\n';
-
-    let totalBottles = 0;
-    let totalAmount = 0;
-
-    entries.forEach((entry, index) => {
-      totalBottles += entry.bottles;
-      totalAmount += entry.amount;
-      csv += `${index + 1},${formatDateDisplay(entry.date)},${formatTimeDisplay(entry.time)},${entry.bottles},${entry.amount}\n`;
+    let csv = 'Index,Date,Time,Bottles,Amount\n';
+    entries.forEach((e, i) => {
+      csv += `${i + 1},${formatDateDisplay(e.date)},${formatTimeDisplay(e.time)},${e.bottles},${e.amount}\n`;
     });
 
-    csv += `\n,,Total,${totalBottles},${totalAmount}`;
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `water_bottle_entries_${currentMonth.replace(' ', '_')}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    showToast('CSV file downloaded successfully!', 'success');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'water_entries.csv';
+    a.click();
   }
 
   function exportToPDF() {
-    if (entries.length === 0) {
-      showToast('No entries to export', 'error');
-      return;
-    }
+    if (!entries.length) return showToast('No entries to export', 'error');
 
-    const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-    let totalBottles = 0;
-    let totalAmount = 0;
+    const rows = entries.map((e, i) => `
+      <tr><td>${i + 1}</td><td>${formatDateDisplay(e.date)}</td><td>${formatTimeDisplay(e.time)}</td><td>${e.bottles}</td><td>₹${e.amount}</td></tr>
+    `).join('');
 
-    const tableRows = entries.map((entry, index) => {
-      totalBottles += entry.bottles;
-      totalAmount += entry.amount;
-      return `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${formatDateDisplay(entry.date)}</td>
-          <td>${formatTimeDisplay(entry.time)}</td>
-          <td>${entry.bottles}</td>
-          <td>₹${entry.amount}</td>
-        </tr>
-      `;
-    }).join('');
-
-    const printContent = `
-      <html><head><title>Water Bottle Tracker - ${currentMonth}</title><style>
-      body { font-family: Arial, sans-serif; margin: 20px; }
-      h1 { text-align: center; color: #3b82f6; margin-bottom: 10px; }
-      h3 { text-align: center; color: #6b7280; margin-bottom: 30px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-      th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-      th { background-color: #f8fafc; font-weight: bold; }
-      .total-row { background-color: #f1f5f9; font-weight: bold; }
-      .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 12px; }
+    const html = `
+      <html><head><title>Export</title><style>
+      body { font-family: Arial; margin: 20px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+      th { background: #f0f0f0; }
       </style></head><body>
-      <h1>Water Bottle Tracker</h1>
-      <h3>${currentMonth}</h3>
-      <table><thead><tr><th>#</th><th>Date</th><th>Time</th><th>Bottles (20L)</th><th>Amount (₹)</th></tr></thead>
-      <tbody>${tableRows}<tr class="total-row">
-        <td colspan="3" style="text-align: right;"><strong>Total</strong></td>
-        <td><strong>${totalBottles}</strong></td>
-        <td><strong>₹${totalAmount}</strong></td>
-      </tr></tbody></table>
-      <div class="footer">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-      </body></html>
-    `;
+      <h2>Water Bottle Tracker</h2>
+      <table><tr><th>#</th><th>Date</th><th>Time</th><th>Bottles</th><th>Amount</th></tr>
+      ${rows}
+      </table></body></html>`;
 
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.print();
-    showToast('PDF generated successfully!', 'success');
+    const win = window.open();
+    win.document.write(html);
+    win.document.close();
+    win.print();
   }
 
-  function formatDateDisplay(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+  function formatDateDisplay(d) {
+    return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  function formatTimeDisplay(timeStr) {
-    const [hours, minutes] = timeStr.split(':');
-    const date = new Date();
-    date.setHours(hours, minutes);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  function formatTimeDisplay(t) {
+    const [h, m] = t.split(':');
+    const d = new Date(); d.setHours(h, m);
+    return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   }
 
-  function showToast(message, type = 'info') {
-    toastMessage.textContent = message;
+  function showToast(msg, type = 'info') {
+    toastMessage.textContent = msg;
     toast.className = `toast show ${type}`;
-    setTimeout(() => hideToast(), 3000);
-  }
-
-  function hideToast() {
-    toast.classList.remove('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
   }
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js')
-        .then(registration => console.log('SW registered: ', registration))
-        .catch(error => console.log('SW registration failed: ', error));
+        .then(r => console.log('SW registered:', r))
+        .catch(err => console.log('SW error:', err));
     });
   }
 });
