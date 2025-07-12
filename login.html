@@ -3,146 +3,117 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login - Water Bottle Tracker</title>
+  <title>Login | Water Tracker</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container" style="max-width: 420px; margin-top: 3rem;">
-    <div class="form-card">
+  <main class="auth-container">
+    <div class="auth-card">
       <h2 id="formTitle">Login</h2>
       <form id="authForm">
-        <div class="input-group">
-          <label>Email</label>
-          <div class="input-wrapper">
-            <input type="email" id="email" required />
-          </div>
+        <div id="signupFields" style="display: none;">
+          <input type="text" id="firstName" placeholder="First Name" required />
+          <input type="text" id="lastName" placeholder="Last Name" required />
+          <input type="tel" id="mobile" placeholder="Mobile Number" required />
         </div>
-        <div class="input-group">
-          <label>Password</label>
-          <div class="input-wrapper">
-            <input type="password" id="password" required />
-            <span class="input-icon">
-              <input type="checkbox" id="togglePassword" title="Show Password"/>
-            </span>
-          </div>
+        <input type="email" id="email" placeholder="Email" required />
+        <div class="password-wrapper">
+          <input type="password" id="password" placeholder="Password" required />
+          <input type="checkbox" id="showPassword"> <label for="showPassword">Show</label>
         </div>
-
-        <div class="input-group" id="additionalFields" style="display: none;">
-          <label>First Name</label>
-          <input type="text" id="fname" />
-          <label>Last Name</label>
-          <input type="text" id="lname" />
-          <label>Mobile Number</label>
-          <input type="text" id="mobile" />
-        </div>
-
         <button type="submit" class="btn btn-primary" id="submitBtn">Login</button>
-
-        <p style="margin-top: 1rem;">
-          <a href="#" id="toggleMode">Switch to Signup</a>
-        </p>
-
-        <p>
-          <a href="#" id="resetPassword">Forgot Password?</a>
-        </p>
+        <p id="toggleText">Don't have an account? <a href="#" id="toggleForm">Signup</a></p>
+        <p><a href="#" id="resetPassword">Forgot Password?</a></p>
       </form>
     </div>
-  </div>
-
-  <div class="toast" id="toast">
-    <span id="toastMessage">Error</span>
-    <button class="toast-close" id="toastClose">&times;</button>
-  </div>
+  </main>
 
   <script type="module">
-    import { auth, db } from './firebase-init.js';
-    import {
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      sendPasswordResetEmail
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      setDoc,
-      doc
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const form = document.getElementById("authForm");
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
-    const toggleMode = document.getElementById("toggleMode");
-    const togglePassword = document.getElementById("togglePassword");
-    const resetPassword = document.getElementById("resetPassword");
-    const toast = document.getElementById("toast");
-    const toastMessage = document.getElementById("toastMessage");
-    const toastClose = document.getElementById("toastClose");
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
+      authDomain: "water-bottle-tracker-43537.firebaseapp.com",
+      projectId: "water-bottle-tracker-43537",
+      storageBucket: "water-bottle-tracker-43537.appspot.com",
+      messagingSenderId: "424777349690",
+      appId: "1:424777349690:web:54056417c24cd2f0329303"
+    };
 
-    const fname = document.getElementById("fname");
-    const lname = document.getElementById("lname");
-    const mobile = document.getElementById("mobile");
-    const additionalFields = document.getElementById("additionalFields");
-    const formTitle = document.getElementById("formTitle");
-    const submitBtn = document.getElementById("submitBtn");
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const authForm = document.getElementById('authForm');
+    const formTitle = document.getElementById('formTitle');
+    const submitBtn = document.getElementById('submitBtn');
+    const toggleForm = document.getElementById('toggleForm');
+    const toggleText = document.getElementById('toggleText');
+    const signupFields = document.getElementById('signupFields');
+    const showPassword = document.getElementById('showPassword');
+    const resetPassword = document.getElementById('resetPassword');
 
     let isSignup = false;
 
-    toggleMode.addEventListener("click", (e) => {
+    toggleForm.addEventListener('click', (e) => {
       e.preventDefault();
       isSignup = !isSignup;
-      formTitle.textContent = isSignup ? "Sign Up" : "Login";
-      submitBtn.textContent = isSignup ? "Sign Up" : "Login";
-      toggleMode.textContent = isSignup ? "Switch to Login" : "Switch to Signup";
-      additionalFields.style.display = isSignup ? "block" : "none";
+      formTitle.textContent = isSignup ? "Signup" : "Login";
+      submitBtn.textContent = isSignup ? "Signup" : "Login";
+      toggleText.innerHTML = isSignup
+        ? `Already have an account? <a href="#" id="toggleForm">Login</a>`
+        : `Don't have an account? <a href="#" id="toggleForm">Signup</a>`;
+      signupFields.style.display = isSignup ? "block" : "none";
     });
 
-    toastClose.addEventListener("click", () => {
-      toast.classList.remove("show");
-    });
-
-    function showToast(msg) {
-      toastMessage.textContent = msg;
-      toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 3000);
-    }
-
-    togglePassword.addEventListener("change", () => {
-      password.type = togglePassword.checked ? "text" : "password";
-    });
-
-    resetPassword.addEventListener("click", async (e) => {
+    authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!email.value) {
-        showToast("Please enter your email");
-        return;
-      }
-      try {
-        await sendPasswordResetEmail(auth, email.value);
-        showToast("Password reset email sent");
-      } catch (error) {
-        showToast(error.message);
-      }
-    });
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      try {
-        if (isSignup) {
-          if (!fname.value || !lname.value || !mobile.value) {
-            showToast("Please fill all profile fields");
-            return;
-          }
-
-          const userCred = await createUserWithEmailAndPassword(auth, email.value, password.value);
-          await setDoc(doc(db, "users", userCred.user.uid), {
-            fname: fname.value,
-            lname: lname.value,
-            mobile: mobile.value
+      if (isSignup) {
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const mobile = document.getElementById('mobile').value.trim();
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          await setDoc(doc(db, "users", userCredential.user.uid), {
+            firstName,
+            lastName,
+            email,
+            mobile
           });
-        } else {
-          await signInWithEmailAndPassword(auth, email.value, password.value);
+          window.location.href = "index.html";
+        } catch (error) {
+          alert(error.message);
         }
-        location.href = "index.html";
-      } catch (error) {
-        showToast(error.message);
+      } else {
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          window.location.href = "index.html";
+        } catch (error) {
+          alert("Login failed: " + error.message);
+        }
+      }
+    });
+
+    showPassword.addEventListener('change', () => {
+      const pwd = document.getElementById('password');
+      pwd.type = showPassword.checked ? 'text' : 'password';
+    });
+
+    resetPassword.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = prompt("Enter your email to reset password:");
+      if (email) {
+        try {
+          await sendPasswordResetEmail(auth, email);
+          alert("Password reset link sent to your email.");
+        } catch (error) {
+          alert("Error: " + error.message);
+        }
       }
     });
   </script>
