@@ -11,9 +11,11 @@ import {
   collection,
   query,
   orderBy,
-  onSnapshot
+  onSnapshot,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
   authDomain: "water-bottle-tracker-43537.firebaseapp.com",
@@ -27,10 +29,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser = null;
-let entryUnsubscribe = null;
-
-// DOM elements
+// DOM Elements
 const totalBottlesElement = document.getElementById('totalBottles');
 const totalAmountElement = document.getElementById('totalAmount');
 const totalEntriesElement = document.getElementById('totalEntries');
@@ -47,7 +46,12 @@ const profileName = document.getElementById('profileName');
 const profileEmail = document.getElementById('profileEmail');
 const profileMobile = document.getElementById('profileMobile');
 
-// Handle auth state
+let currentUser = null;
+let entryUnsubscribe = null;
+let currentEntries = [];
+let editingId = null;
+
+// Auth listener
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = 'login.html';
@@ -59,21 +63,18 @@ onAuthStateChanged(auth, async (user) => {
   setupEntryListener();
 });
 
-// Load profile
 async function loadUserProfile() {
   const profileRef = doc(db, "users", currentUser.uid);
-  const profileSnap = await getDoc(profileRef);
-  if (profileSnap.exists()) {
-    const data = profileSnap.data();
-    const displayName = data.firstName || "User";
-    userName.textContent = `👤 ${displayName}`;
-    profileName.textContent = `${data.firstName} ${data.lastName || ""}`;
-    profileEmail.textContent = data.email || currentUser.email;
-    profileMobile.textContent = data.mobile || "Not set";
+  const snap = await getDoc(profileRef);
+  if (snap.exists()) {
+    const d = snap.data();
+    userName.textContent = `👤 ${d.firstName || "User"}`;
+    profileName.textContent = `${d.firstName || ""} ${d.lastName || ""}`;
+    profileEmail.textContent = d.email || currentUser.email;
+    profileMobile.textContent = d.mobile || "Not set";
   }
 }
 
-// Setup live entries listener
 function setupEntryListener() {
   if (entryUnsubscribe) entryUnsubscribe();
 
@@ -81,12 +82,13 @@ function setupEntryListener() {
   entryUnsubscribe = onSnapshot(q, (snapshot) => {
     const entries = [];
     snapshot.forEach(doc => entries.push({ id: doc.id, ...doc.data() }));
+    currentEntries = entries;
     renderEntries(entries);
     updateStats(entries);
   });
 }
 
-// Add entry
+// Add Entry
 document.getElementById('addEntry').addEventListener('click', async () => {
   const bottles = parseInt(bottleInput.value);
   if (!bottles || bottles <= 0) {
@@ -107,7 +109,7 @@ document.getElementById('addEntry').addEventListener('click', async () => {
   showToast(`Added ${bottles} bottle${bottles > 1 ? 's' : ''}`, "success");
 });
 
-// Render entries
+// Render Entries
 function renderEntries(entries) {
   if (entries.length === 0) {
     entriesTable.style.display = 'none';
@@ -121,28 +123,85 @@ function renderEntries(entries) {
 
   entries.forEach((entry, index) => {
     const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${formatDateDisplay(entry.date)}</td>
-      <td>${formatTimeDisplay(entry.time)}</td>
-      <td>${entry.bottles}</td>
-      <td>₹${entry.amount}</td>
-      <td class="actions">
-        <button onclick="deleteEntry('${entry.id}')">Delete</button>
-      </td>
-    `;
+
+    if (editingId === entry.id) {
+      row.innerHTML = `
+        <td>${index + 1}</td>
+        <td><input type="date" id="editDate" value="${entry.date}"></td>
+        <td><input type="time" id="editTime" value="${entry.time}"></td>
+        <td><input type="number" id="editBottles" value="${entry.bottles}" min="1"></td>
+        <td id="editAmount">₹${entry.amount}</td>
+        <td class="actions">
+          <button onclick="saveEdit('${entry.id}')">Save</button>
+          <button onclick="cancelEdit()">Cancel</button>
+        </td>
+      `;
+      setTimeout(() => {
+        document.getElementById('editBottles').addEventListener('input', function(e) {
+          const amt = (parseInt(e.target.value) || 0) * 40;
+          document.getElementById('editAmount').textContent = `₹${amt}`;
+        });
+      }, 10);
+    } else {
+      row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${formatDateDisplay(entry.date)}</td>
+        <td>${formatTimeDisplay(entry.time)}</td>
+        <td>${entry.bottles}</td>
+        <td>₹${entry.amount}</td>
+        <td class="actions">
+          <button onclick="startEdit('${entry.id}')">Edit</button>
+          <button onclick="deleteEntry('${entry.id}')">Delete</button>
+        </td>
+      `;
+    }
+
     tableBody.appendChild(row);
   });
 }
 
-// Delete entry
-window.deleteEntry = async (id) => {
+// Edit
+window.startEdit = function(id) {
+  editingId = id;
+  renderEntries(currentEntries);
+};
+
+// Save Edit
+window.saveEdit = async function(id) {
+  const newDate = document.getElementById('editDate').value;
+  const newTime = document.getElementById('editTime').value;
+  const newBottles = parseInt(document.getElementById('editBottles').value);
+
+  if (!newDate || !newTime || !newBottles || newBottles <= 0) {
+    showToast("Please enter all fields correctly", "error");
+    return;
+  }
+
+  await updateDoc(doc(db, "entries", currentUser.uid, "data", id), {
+    date: newDate,
+    time: newTime,
+    bottles: newBottles,
+    amount: newBottles * 40
+  });
+
+  editingId = null;
+  showToast("Entry updated", "success");
+};
+
+// Cancel Edit
+window.cancelEdit = function() {
+  editingId = null;
+  renderEntries(currentEntries);
+};
+
+// Delete Entry
+window.deleteEntry = async function(id) {
   if (!confirm("Delete this entry?")) return;
   await deleteDoc(doc(db, "entries", currentUser.uid, "data", id));
   showToast("Entry deleted", "success");
 };
 
-// Export to CSV
+// Export CSV
 document.getElementById('exportExcel').addEventListener('click', async () => {
   const q = query(collection(db, "entries", currentUser.uid, "data"), orderBy("timestamp"));
   const snapshot = await getDocs(q);
@@ -173,12 +232,12 @@ document.getElementById('exportExcel').addEventListener('click', async () => {
   showToast("CSV downloaded!", "success");
 });
 
-// Export to PDF (simplified for brevity)
+// Export PDF (print-friendly)
 document.getElementById('exportPDF').addEventListener('click', () => {
-  window.print(); // You can enhance this using html2pdf later
+  window.print();
 });
 
-// Clear All (not needed if stored in Firestore unless you want full delete)
+// Clear All
 document.getElementById('clearAll').addEventListener('click', async () => {
   if (!confirm("Clear all entries?")) return;
   const q = query(collection(db, "entries", currentUser.uid, "data"));
@@ -194,7 +253,7 @@ window.logout = async () => {
   window.location.href = "login.html";
 };
 
-// Utility
+// Helpers
 function updateCurrentMonth() {
   const now = new Date();
   currentMonthElement.textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
