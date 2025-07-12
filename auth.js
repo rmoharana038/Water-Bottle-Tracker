@@ -31,16 +31,15 @@ const signupForm = document.getElementById("signupForm");
 if (signupForm) {
   signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("signupEmail").value;
+    const email = document.getElementById("signupEmail").value.trim();
     const password = document.getElementById("signupPassword").value;
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      alert("Account created successfully!");
-      localStorage.setItem("currentUser", email);
+      alert("Account created successfully! You are now logged in.");
       window.location.href = "index.html";
     } catch (error) {
-      alert(error.message);
+      alert("Signup failed: " + error.message);
     }
   });
 }
@@ -52,15 +51,14 @@ const loginForm = document.getElementById("loginForm");
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("loginEmail").value;
+    const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      localStorage.setItem("currentUser", email);
       window.location.href = "index.html";
     } catch (error) {
-      alert(error.message);
+      alert("Login failed: " + error.message);
     }
   });
 }
@@ -72,25 +70,24 @@ const resetForm = document.getElementById("resetForm");
 if (resetForm) {
   resetForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("resetEmail").value;
+    const email = document.getElementById("resetEmail").value.trim();
 
     try {
       await sendPasswordResetEmail(auth, email);
-      alert("Password reset email sent!");
+      alert("Password reset email sent! Check your inbox.");
       window.location.href = "login.html";
     } catch (error) {
-      alert(error.message);
+      alert("Failed to send reset email: " + error.message);
     }
   });
 }
 
 // ---------------------------
-// Logout (used in index.html)
+// Logout (used in index.html or elsewhere)
 // ---------------------------
 window.logout = function () {
   signOut(auth)
     .then(() => {
-      localStorage.removeItem("currentUser");
       window.location.href = "login.html";
     })
     .catch((error) => {
