@@ -1,109 +1,114 @@
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  updateDoc,
   doc,
+  getDoc,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
   query,
-  where
+  orderBy,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { db } from './firebase-init.js';
+const firebaseConfig = {
+  apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
+  authDomain: "water-bottle-tracker-43537.firebaseapp.com",
+  projectId: "water-bottle-tracker-43537",
+  storageBucket: "water-bottle-tracker-43537.appspot.com",
+  messagingSenderId: "424777349690",
+  appId: "1:424777349690:web:54056417c24cd2f0329303"
+};
 
-const auth = getAuth();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
 let currentUser = null;
+let entryUnsubscribe = null;
 
-const bottleInput = document.getElementById('bottleCount');
-const addBtn = document.getElementById('addEntry');
-const clearBtn = document.getElementById('clearAll');
-const exportExcelBtn = document.getElementById('exportExcel');
-const exportPDFBtn = document.getElementById('exportPDF');
-const tableBody = document.getElementById('entryTableBody');
-const entriesTable = document.getElementById('entriesTable');
-const emptyState = document.getElementById('emptyState');
+// DOM elements
 const totalBottlesElement = document.getElementById('totalBottles');
 const totalAmountElement = document.getElementById('totalAmount');
 const totalEntriesElement = document.getElementById('totalEntries');
-const currentMonthElement = document.getElementById('currentMonth');
+const bottleInput = document.getElementById('bottleCount');
+const tableBody = document.getElementById('entryTableBody');
+const entriesTable = document.getElementById('entriesTable');
+const emptyState = document.getElementById('emptyState');
 const toast = document.getElementById('toast');
 const toastMessage = document.getElementById('toastMessage');
 const toastClose = document.getElementById('toastClose');
+const currentMonthElement = document.getElementById('currentMonth');
+const userName = document.getElementById('userName');
+const profileName = document.getElementById('profileName');
+const profileEmail = document.getElementById('profileEmail');
+const profileMobile = document.getElementById('profileMobile');
 
-let entries = [];
-let editingId = null;
-
+// Handle auth state
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "login.html";
-  } else {
-    currentUser = user;
-    updateCurrentMonth();
-    await fetchEntries();
-    renderEntries();
-    updateStats();
+    window.location.href = 'login.html';
+    return;
   }
+  currentUser = user;
+  await loadUserProfile();
+  updateCurrentMonth();
+  setupEntryListener();
 });
 
-toastClose.addEventListener('click', hideToast);
-addBtn.addEventListener('click', addEntry);
-clearBtn.addEventListener('click', clearAllEntries);
-exportExcelBtn.addEventListener('click', exportToCSV);
-exportPDFBtn.addEventListener('click', exportToPDF);
-bottleInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') addEntry();
-});
-
-window.logout = function () {
-  signOut(auth).then(() => window.location.href = "login.html");
-};
-
-function updateCurrentMonth() {
-  const now = new Date();
-  const monthYear = now.toLocaleString('default', { month: 'long', year: 'numeric' });
-  currentMonthElement.textContent = monthYear;
+// Load profile
+async function loadUserProfile() {
+  const profileRef = doc(db, "users", currentUser.uid);
+  const profileSnap = await getDoc(profileRef);
+  if (profileSnap.exists()) {
+    const data = profileSnap.data();
+    const displayName = data.firstName || "User";
+    userName.textContent = `👤 ${displayName}`;
+    profileName.textContent = `${data.firstName} ${data.lastName || ""}`;
+    profileEmail.textContent = data.email || currentUser.email;
+    profileMobile.textContent = data.mobile || "Not set";
+  }
 }
 
-async function fetchEntries() {
-  entries = [];
-  const q = query(collection(db, "entries"), where("uid", "==", currentUser.uid));
-  const snapshot = await getDocs(q);
-  snapshot.forEach((docSnap) => {
-    entries.push({ id: docSnap.id, ...docSnap.data() });
+// Setup live entries listener
+function setupEntryListener() {
+  if (entryUnsubscribe) entryUnsubscribe();
+
+  const q = query(collection(db, "entries", currentUser.uid, "data"), orderBy("timestamp", "desc"));
+  entryUnsubscribe = onSnapshot(q, (snapshot) => {
+    const entries = [];
+    snapshot.forEach(doc => entries.push({ id: doc.id, ...doc.data() }));
+    renderEntries(entries);
+    updateStats(entries);
   });
 }
 
-async function addEntry() {
+// Add entry
+document.getElementById('addEntry').addEventListener('click', async () => {
   const bottles = parseInt(bottleInput.value);
   if (!bottles || bottles <= 0) {
-    showToast('Enter a valid number of bottles', 'error');
+    showToast("Enter valid number of bottles", "error");
     return;
   }
 
   const now = new Date();
-  const entry = {
-    uid: currentUser.uid,
+  await addDoc(collection(db, "entries", currentUser.uid, "data"), {
     date: now.toISOString().slice(0, 10),
     time: now.toTimeString().slice(0, 5),
     bottles,
     amount: bottles * 40,
-  };
+    timestamp: now
+  });
 
-  const docRef = await addDoc(collection(db, "entries"), entry);
-  entries.push({ ...entry, id: docRef.id });
   bottleInput.value = '';
-  renderEntries();
-  updateStats();
-  showToast('Entry added successfully!', 'success');
-}
+  showToast(`Added ${bottles} bottle${bottles > 1 ? 's' : ''}`, "success");
+});
 
-function renderEntries() {
+// Render entries
+function renderEntries(entries) {
   if (entries.length === 0) {
     entriesTable.style.display = 'none';
     emptyState.style.display = 'block';
@@ -118,152 +123,102 @@ function renderEntries() {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${index + 1}</td>
-      <td>${formatDate(entry.date)}</td>
-      <td>${formatTime(entry.time)}</td>
+      <td>${formatDateDisplay(entry.date)}</td>
+      <td>${formatTimeDisplay(entry.time)}</td>
       <td>${entry.bottles}</td>
       <td>₹${entry.amount}</td>
-      <td>
-        <button class="edit-btn" onclick="startEdit('${entry.id}')">Edit</button>
-        <button class="delete-btn" onclick="deleteEntry('${entry.id}')">Delete</button>
+      <td class="actions">
+        <button onclick="deleteEntry('${entry.id}')">Delete</button>
       </td>
     `;
     tableBody.appendChild(row);
   });
 }
 
-window.startEdit = function (id) {
-  const entry = entries.find(e => e.id === id);
-  if (!entry) return;
-
-  editingId = id;
-  const index = entries.findIndex(e => e.id === id);
-  const row = tableBody.children[index];
-
-  row.innerHTML = `
-    <td>${index + 1}</td>
-    <td><input type="date" id="editDate" value="${entry.date}"></td>
-    <td><input type="time" id="editTime" value="${entry.time}"></td>
-    <td><input type="number" id="editBottles" value="${entry.bottles}"></td>
-    <td id="editAmount">₹${entry.amount}</td>
-    <td>
-      <button class="save-btn" onclick="saveEdit()">Save</button>
-      <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
-    </td>
-  `;
-
-  document.getElementById('editBottles').addEventListener('input', function (e) {
-    const bottles = parseInt(e.target.value) || 0;
-    document.getElementById('editAmount').textContent = `₹${bottles * 40}`;
-  });
+// Delete entry
+window.deleteEntry = async (id) => {
+  if (!confirm("Delete this entry?")) return;
+  await deleteDoc(doc(db, "entries", currentUser.uid, "data", id));
+  showToast("Entry deleted", "success");
 };
 
-window.saveEdit = async function () {
-  const newDate = document.getElementById('editDate').value;
-  const newTime = document.getElementById('editTime').value;
-  const newBottles = parseInt(document.getElementById('editBottles').value);
-
-  if (!newDate || !newTime || !newBottles || newBottles <= 0) {
-    showToast('Please fill all fields correctly', 'error');
+// Export to CSV
+document.getElementById('exportExcel').addEventListener('click', async () => {
+  const q = query(collection(db, "entries", currentUser.uid, "data"), orderBy("timestamp"));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) {
+    showToast("No entries to export", "error");
     return;
   }
 
-  const index = entries.findIndex(e => e.id === editingId);
-  const updatedEntry = {
-    ...entries[index],
-    date: newDate,
-    time: newTime,
-    bottles: newBottles,
-    amount: newBottles * 40,
-  };
+  let csv = `Water Tracker\n${currentMonthElement.textContent}\n\nIndex,Date,Time,Bottles,Amount\n`;
+  let index = 1, totalBottles = 0, totalAmount = 0;
 
-  await updateDoc(doc(db, "entries", editingId), updatedEntry);
-  entries[index] = updatedEntry;
-  editingId = null;
-  renderEntries();
-  updateStats();
-  showToast('Entry updated successfully!', 'success');
-};
-
-window.cancelEdit = function () {
-  editingId = null;
-  renderEntries();
-};
-
-window.deleteEntry = async function (id) {
-  if (!confirm("Delete this entry?")) return;
-  await deleteDoc(doc(db, "entries", id));
-  entries = entries.filter(e => e.id !== id);
-  renderEntries();
-  updateStats();
-  showToast('Entry deleted.', 'success');
-};
-
-async function clearAllEntries() {
-  if (!confirm("Clear all entries? This cannot be undone.")) return;
-  const userEntries = entries.filter(e => e.uid === currentUser.uid);
-  for (let entry of userEntries) {
-    await deleteDoc(doc(db, "entries", entry.id));
-  }
-  entries = [];
-  renderEntries();
-  updateStats();
-  showToast("All entries cleared.", "success");
-}
-
-function updateStats() {
-  const totalBottles = entries.reduce((sum, e) => sum + e.bottles, 0);
-  const totalAmount = entries.reduce((sum, e) => sum + e.amount, 0);
-  const totalEntries = entries.length;
-  totalBottlesElement.textContent = totalBottles;
-  totalAmountElement.textContent = `₹${totalAmount}`;
-  totalEntriesElement.textContent = totalEntries;
-}
-
-function exportToCSV() {
-  if (entries.length === 0) return showToast('No entries to export', 'error');
-
-  let csv = `Water Bottle Tracker\n${currentMonthElement.textContent}\n\n`;
-  csv += 'Index,Date,Time,Bottles,Amount\n';
-  entries.forEach((e, i) => {
-    csv += `${i + 1},${formatDate(e.date)},${formatTime(e.time)},${e.bottles},${e.amount}\n`;
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    csv += `${index++},${d.date},${d.time},${d.bottles},${d.amount}\n`;
+    totalBottles += d.bottles;
+    totalAmount += d.amount;
   });
 
+  csv += `\n,,Total,${totalBottles},${totalAmount}`;
   const blob = new Blob([csv], { type: 'text/csv' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = 'entries.csv';
+  link.download = 'Water_Tracker.csv';
+  document.body.appendChild(link);
   link.click();
-}
+  document.body.removeChild(link);
 
-function exportToPDF() {
-  if (entries.length === 0) return showToast('No entries to export', 'error');
-  const w = window.open('', '', 'width=800,height=600');
-  w.document.write(`
-    <html><head><title>PDF Export</title></head><body>
-    <h1>Water Bottle Tracker - ${currentMonthElement.textContent}</h1>
-    <table border="1" cellspacing="0" cellpadding="8">
-      <tr><th>#</th><th>Date</th><th>Time</th><th>Bottles</th><th>Amount</th></tr>
-      ${entries.map((e, i) => `
-        <tr><td>${i + 1}</td><td>${formatDate(e.date)}</td><td>${formatTime(e.time)}</td><td>${e.bottles}</td><td>${e.amount}</td></tr>
-      `).join('')}
-    </table>
-    </body></html>
-  `);
-  w.document.close();
-  w.print();
-}
+  showToast("CSV downloaded!", "success");
+});
 
-function formatDate(d) {
-  return new Date(d).toLocaleDateString('en-GB');
+// Export to PDF (simplified for brevity)
+document.getElementById('exportPDF').addEventListener('click', () => {
+  window.print(); // You can enhance this using html2pdf later
+});
+
+// Clear All (not needed if stored in Firestore unless you want full delete)
+document.getElementById('clearAll').addEventListener('click', async () => {
+  if (!confirm("Clear all entries?")) return;
+  const q = query(collection(db, "entries", currentUser.uid, "data"));
+  const snapshot = await getDocs(q);
+  const promises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+  await Promise.all(promises);
+  showToast("All entries cleared!", "success");
+});
+
+// Logout
+window.logout = async () => {
+  await signOut(auth);
+  window.location.href = "login.html";
+};
+
+// Utility
+function updateCurrentMonth() {
+  const now = new Date();
+  currentMonthElement.textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
 }
-function formatTime(t) {
-  return t;
+function updateStats(entries) {
+  const totalBottles = entries.reduce((sum, e) => sum + e.bottles, 0);
+  const totalAmount = entries.reduce((sum, e) => sum + e.amount, 0);
+  totalBottlesElement.textContent = totalBottles;
+  totalAmountElement.textContent = `₹${totalAmount}`;
+  totalEntriesElement.textContent = entries.length;
 }
-function showToast(msg, type = 'info') {
-  toastMessage.textContent = msg;
+function formatDateDisplay(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function formatTimeDisplay(timeStr) {
+  const [hours, minutes] = timeStr.split(":");
+  const date = new Date();
+  date.setHours(hours, minutes);
+  return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+}
+function showToast(message, type = 'info') {
+  toastMessage.textContent = message;
   toast.className = `toast show ${type}`;
-  setTimeout(() => hideToast(), 3000);
+  setTimeout(() => toast.classList.remove('show'), 3000);
 }
-function hideToast() {
-  toast.classList.remove('show');
-}
+toastClose.addEventListener('click', () => toast.classList.remove('show'));
