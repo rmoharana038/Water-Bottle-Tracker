@@ -29,9 +29,9 @@
 
         <div class="input-group" id="additionalFields" style="display: none;">
           <label>First Name</label>
-          <input type="text" id="firstName" />
+          <input type="text" id="fname" />
           <label>Last Name</label>
-          <input type="text" id="lastName" />
+          <input type="text" id="lname" />
           <label>Mobile Number</label>
           <input type="text" id="mobile" />
         </div>
@@ -55,23 +55,16 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { auth, db } from './firebase-init.js';
     import {
-      getAuth,
       signInWithEmailAndPassword,
       createUserWithEmailAndPassword,
       sendPasswordResetEmail
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
-      getFirestore,
-      doc,
-      setDoc
+      setDoc,
+      doc
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    import { firebaseConfig } from './firebase-init.js';
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
 
     const form = document.getElementById("authForm");
     const email = document.getElementById("email");
@@ -83,8 +76,8 @@
     const toastMessage = document.getElementById("toastMessage");
     const toastClose = document.getElementById("toastClose");
 
-    const firstName = document.getElementById("firstName");
-    const lastName = document.getElementById("lastName");
+    const fname = document.getElementById("fname");
+    const lname = document.getElementById("lname");
     const mobile = document.getElementById("mobile");
     const additionalFields = document.getElementById("additionalFields");
     const formTitle = document.getElementById("formTitle");
@@ -133,10 +126,15 @@
       e.preventDefault();
       try {
         if (isSignup) {
+          if (!fname.value || !lname.value || !mobile.value) {
+            showToast("Please fill all profile fields");
+            return;
+          }
+
           const userCred = await createUserWithEmailAndPassword(auth, email.value, password.value);
           await setDoc(doc(db, "users", userCred.user.uid), {
-            firstName: firstName.value,
-            lastName: lastName.value,
+            fname: fname.value,
+            lname: lname.value,
             mobile: mobile.value
           });
         } else {
