@@ -38,45 +38,54 @@
       font-size: 1rem;
     }
 
-    .auth-card .input-wrapper {
+    .input-wrapper {
       position: relative;
     }
 
-    .auth-card .input-wrapper button {
+    .input-wrapper button {
       position: absolute;
       right: 10px;
       top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
-      font-size: 1.1rem;
+      font-size: 1rem;
       cursor: pointer;
       color: #3b82f6;
     }
 
-    .auth-card button.btn-primary {
+    .btn-primary {
       width: 100%;
       padding: 0.75rem;
       font-size: 1rem;
       margin-top: 0.5rem;
+      background-color: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
     }
 
-    .auth-card .link-btn {
+    .btn-primary:hover {
+      background-color: #2563eb;
+    }
+
+    .link-btn {
       background: none;
       border: none;
       color: #3b82f6;
       font-size: 0.875rem;
       cursor: pointer;
       text-decoration: underline;
-      margin-top: 0.5rem;
+      margin: 0.25rem;
     }
 
-    .auth-card .error {
+    .error {
       color: red;
       margin-top: 0.5rem;
     }
 
-    .auth-card .success {
+    .success {
       color: green;
       margin-top: 0.5rem;
     }
@@ -91,21 +100,22 @@
 
       <div class="input-wrapper">
         <input type="password" id="password" placeholder="Password" />
-        <button type="button" onclick="togglePassword('password')">👁️</button>
+        <button type="button" onclick="togglePassword('password', this)">👁️</button>
       </div>
 
       <div id="confirmPassContainer" style="display: none;">
         <div class="input-wrapper">
           <input type="password" id="confirmPassword" placeholder="Confirm Password" />
-          <button type="button" onclick="togglePassword('confirmPassword')">👁️</button>
+          <button type="button" onclick="togglePassword('confirmPassword', this)">👁️</button>
         </div>
       </div>
 
-      <button class="btn btn-primary" onclick="submitForm()" id="submitBtn">Login</button>
-      <button class="link-btn" onclick="toggleMode()">Switch to Signup</button>
-      <button class="link-btn" onclick="resetPassword()">Forgot Password?</button>
-
-      <p id="msg" class=""></p>
+      <button class="btn-primary" onclick="submitForm()" id="submitBtn">Login</button>
+      <div>
+        <button class="link-btn" onclick="toggleMode()" id="modeToggleBtn">Switch to Signup</button>
+        <button class="link-btn" onclick="resetPassword()">Forgot Password?</button>
+      </div>
+      <p id="msg"></p>
     </div>
   </div>
 
@@ -119,15 +129,16 @@
 
     let isLogin = true;
 
-    function toggleMode() {
+    window.toggleMode = function () {
       isLogin = !isLogin;
       document.getElementById("formTitle").textContent = isLogin ? "Login" : "Signup";
       document.getElementById("submitBtn").textContent = isLogin ? "Login" : "Signup";
       document.getElementById("confirmPassContainer").style.display = isLogin ? "none" : "block";
+      document.getElementById("modeToggleBtn").textContent = isLogin ? "Switch to Signup" : "Switch to Login";
       document.getElementById("msg").textContent = "";
-    }
+    };
 
-    async function submitForm() {
+    window.submitForm = async function () {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
       const confirmPassword = document.getElementById("confirmPassword")?.value.trim();
@@ -159,15 +170,15 @@
         msg.className = "error";
         msg.textContent = error.message;
       }
-    }
+    };
 
-    async function resetPassword() {
+    window.resetPassword = async function () {
       const email = document.getElementById("email").value.trim();
       const msg = document.getElementById("msg");
 
       if (!email) {
         msg.className = "error";
-        msg.textContent = "Please enter your email to reset password.";
+        msg.textContent = "Enter your email to reset password.";
         return;
       }
 
@@ -179,18 +190,13 @@
         msg.className = "error";
         msg.textContent = error.message;
       }
-    }
+    };
 
-    window.toggleMode = toggleMode;
-    window.submitForm = submitForm;
-    window.resetPassword = resetPassword;
-    window.togglePassword = function(fieldId) {
+    window.togglePassword = function (fieldId, btn) {
       const input = document.getElementById(fieldId);
-      if (input.type === "password") {
-        input.type = "text";
-      } else {
-        input.type = "password";
-      }
+      const visible = input.type === "text";
+      input.type = visible ? "password" : "text";
+      btn.textContent = visible ? "👁️" : "🙈";
     };
   </script>
 </body>
