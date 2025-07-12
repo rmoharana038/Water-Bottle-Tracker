@@ -20,7 +20,16 @@
         </div>
       </div>
       <div class="header-actions">
-        <button class="btn btn-outline" onclick="logout()">Logout</button>
+        <div class="profile-menu">
+          <span id="userName">👤</span>
+          <div class="dropdown" id="profileDropdown">
+            <p><strong id="profileName">User</strong></p>
+            <p id="profileEmail"></p>
+            <p id="profileMobile"></p>
+            <hr />
+            <button onclick="logout()">Logout</button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -120,7 +129,6 @@
     </div>
   </noscript>
 
-  <!-- Firebase & App Logic -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
