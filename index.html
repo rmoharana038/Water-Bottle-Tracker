@@ -26,7 +26,6 @@
   </header>
 
   <main class="container">
-    <!-- Statistics Section -->
     <div class="stats-container">
       <div class="stat-card">
         <div class="stat-icon blue">📦</div>
@@ -51,7 +50,6 @@
       </div>
     </div>
 
-    <!-- Entry Form -->
     <div class="form-card">
       <div class="form-header">
         <h2>Track New Entry</h2>
@@ -70,7 +68,6 @@
       </div>
     </div>
 
-    <!-- Table Section -->
     <div class="table-card">
       <div class="table-header">
         <h2>Entries</h2>
@@ -98,7 +95,6 @@
       </div>
     </div>
 
-    <!-- Action Buttons -->
     <div class="header-actions" style="margin-top: 20px;">
       <button class="btn btn-outline" id="exportExcel">Export CSV</button>
       <button class="btn btn-outline" id="exportPDF">Generate PDF</button>
@@ -106,7 +102,6 @@
     </div>
   </main>
 
-  <!-- Toast Notification -->
   <div class="toast" id="toast">
     <div class="toast-content">
       <span id="toastMessage"></span>
@@ -120,19 +115,7 @@
     </div>
   </noscript>
 
-  <!-- Firebase Auth Check -->
-  <script type="module">
-    import { auth } from './firebase-init.js';
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-      }
-    });
-  </script>
-
-  <!-- App Logic -->
+  <!-- Firebase-Auth-Based JS -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
