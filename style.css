@@ -213,34 +213,33 @@ body {
 }
 
 /* Dropdown Profile Menu */
-.profile-menu {
+.dropdown {
   position: relative;
   display: inline-block;
-  cursor: pointer;
 }
 
-.profile-menu:hover #profileDropdown {
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  min-width: 220px;
+  box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+  padding: 1rem;
+  right: 0;
+  z-index: 1;
+  border-radius: 8px;
+  color: #1f2937;
+}
+
+.dropdown:hover .dropdown-content {
   display: block;
 }
 
-#profileDropdown {
-  display: none;
-  position: absolute;
-  right: 0;
-  background: white;
-  color: #1f2937;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  min-width: 220px;
-  z-index: 100;
-}
-
-#profileDropdown p {
+.dropdown-content p {
   margin-bottom: 0.4rem;
 }
 
-#profileDropdown button {
+.dropdown-content button {
   margin-top: 0.5rem;
   width: 100%;
 }
@@ -283,44 +282,4 @@ body {
   border: none;
   margin-left: 1rem;
   cursor: pointer;
-}
-
-/* Auth Form (login.html) */
-.auth-container {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #e5e7eb;
-}
-
-.auth-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 10px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.auth-card h2 {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.auth-card input[type="text"],
-.auth-card input[type="email"],
-.auth-card input[type="password"],
-.auth-card input[type="tel"] {
-  width: 100%;
-  padding: 0.6rem;
-  margin-bottom: 0.8rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-}
-
-.password-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
