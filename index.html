@@ -8,14 +8,46 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="logo.png" type="image/png" />
   <meta name="theme-color" content="#3B82F6" />
-  <script>
-    // Redirect to login if not authenticated
-    document.addEventListener('DOMContentLoaded', () => {
-      const currentUser = localStorage.getItem('currentUser');
-      if (!currentUser) {
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
+      authDomain: "water-bottle-tracker-43537.firebaseapp.com",
+      projectId: "water-bottle-tracker-43537",
+      storageBucket: "water-bottle-tracker-43537.appspot.com",
+      messagingSenderId: "424777349690",
+      appId: "1:424777349690:web:54056417c24cd2f0329303",
+      measurementId: "G-ZKGP7LC80E"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.auth = auth;
+    window.db = db;
+
+    // Redirect to login if not logged in
+    onAuthStateChanged(auth, user => {
+      if (!user) {
         window.location.href = 'login.html';
+      } else {
+        localStorage.setItem('currentUser', user.uid); // Optional fallback
       }
     });
+
+    // Logout function
+    window.logout = function () {
+      signOut(auth).then(() => {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+      });
+    };
   </script>
 </head>
 <body>
@@ -123,13 +155,7 @@
     </div>
   </div>
 
-  <!-- JavaScript Files -->
-  <script src="script.js"></script>
-  <script>
-    function logout() {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'login.html';
-    }
-  </script>
+  <!-- App Script -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
