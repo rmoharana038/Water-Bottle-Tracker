@@ -3,142 +3,148 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login - Water Tracker</title>
+  <title>Login - Water Bottle Tracker</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="login-container">
+  <div class="container" style="max-width: 420px; margin-top: 3rem;">
     <div class="form-card">
       <h2 id="formTitle">Login</h2>
-
-      <div id="nameFields" style="display: none;">
+      <form id="authForm">
         <div class="input-group">
-          <label for="firstName">First Name</label>
-          <input type="text" id="firstName" placeholder="John"/>
+          <label>Email</label>
+          <div class="input-wrapper">
+            <input type="email" id="email" required />
+          </div>
         </div>
         <div class="input-group">
-          <label for="lastName">Last Name</label>
-          <input type="text" id="lastName" placeholder="Doe"/>
+          <label>Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" required />
+            <span class="input-icon">
+              <input type="checkbox" id="togglePassword" title="Show Password"/>
+            </span>
+          </div>
         </div>
-        <div class="input-group">
-          <label for="mobile">Mobile Number</label>
-          <input type="tel" id="mobile" placeholder="9876543210"/>
+
+        <div class="input-group" id="additionalFields" style="display: none;">
+          <label>First Name</label>
+          <input type="text" id="firstName" />
+          <label>Last Name</label>
+          <input type="text" id="lastName" />
+          <label>Mobile Number</label>
+          <input type="text" id="mobile" />
         </div>
-      </div>
 
-      <div class="input-group">
-        <label for="email">Email ID</label>
-        <input type="email" id="email" placeholder="example@mail.com"/>
-      </div>
+        <button type="submit" class="btn btn-primary" id="submitBtn">Login</button>
 
-      <div class="input-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="********"/>
-        <label><input type="checkbox" id="showPassword" /> Show Password</label>
-      </div>
+        <p style="margin-top: 1rem;">
+          <a href="#" id="toggleMode">Switch to Signup</a>
+        </p>
 
-      <button class="btn btn-primary" id="submitBtn">Login</button>
-      <p style="margin-top: 1rem; text-align: center;">
-        <a href="#" id="toggleLink">Switch to Signup</a>
-        <br />
-        <a href="#" id="resetPasswordLink">Forgot Password?</a>
-      </p>
+        <p>
+          <a href="#" id="resetPassword">Forgot Password?</a>
+        </p>
+      </form>
     </div>
   </div>
 
+  <div class="toast" id="toast">
+    <span id="toastMessage">Error</span>
+    <button class="toast-close" id="toastClose">&times;</button>
+  </div>
+
   <script type="module">
-    import { auth, db } from './firebase-init.js';
-    import { 
-      signInWithEmailAndPassword, 
-      createUserWithEmailAndPassword, 
-      sendPasswordResetEmail 
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      sendPasswordResetEmail
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const isLogin = { mode: true };
+    import { firebaseConfig } from './firebase-init.js';
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
+    const form = document.getElementById("authForm");
     const email = document.getElementById("email");
     const password = document.getElementById("password");
-    const submitBtn = document.getElementById("submitBtn");
-    const toggleLink = document.getElementById("toggleLink");
-    const resetPasswordLink = document.getElementById("resetPasswordLink");
-    const showPassword = document.getElementById("showPassword");
+    const toggleMode = document.getElementById("toggleMode");
+    const togglePassword = document.getElementById("togglePassword");
+    const resetPassword = document.getElementById("resetPassword");
+    const toast = document.getElementById("toast");
+    const toastMessage = document.getElementById("toastMessage");
+    const toastClose = document.getElementById("toastClose");
 
-    const formTitle = document.getElementById("formTitle");
-    const nameFields = document.getElementById("nameFields");
     const firstName = document.getElementById("firstName");
     const lastName = document.getElementById("lastName");
     const mobile = document.getElementById("mobile");
+    const additionalFields = document.getElementById("additionalFields");
+    const formTitle = document.getElementById("formTitle");
+    const submitBtn = document.getElementById("submitBtn");
 
-    toggleLink.addEventListener("click", () => {
-      isLogin.mode = !isLogin.mode;
-      if (isLogin.mode) {
-        formTitle.innerText = "Login";
-        submitBtn.innerText = "Login";
-        toggleLink.innerText = "Switch to Signup";
-        nameFields.style.display = "none";
-      } else {
-        formTitle.innerText = "Signup";
-        submitBtn.innerText = "Signup";
-        toggleLink.innerText = "Switch to Login";
-        nameFields.style.display = "block";
-      }
+    let isSignup = false;
+
+    toggleMode.addEventListener("click", (e) => {
+      e.preventDefault();
+      isSignup = !isSignup;
+      formTitle.textContent = isSignup ? "Sign Up" : "Login";
+      submitBtn.textContent = isSignup ? "Sign Up" : "Login";
+      toggleMode.textContent = isSignup ? "Switch to Login" : "Switch to Signup";
+      additionalFields.style.display = isSignup ? "block" : "none";
     });
 
-    showPassword.addEventListener("change", () => {
-      password.type = showPassword.checked ? "text" : "password";
+    toastClose.addEventListener("click", () => {
+      toast.classList.remove("show");
     });
 
-    resetPasswordLink.addEventListener("click", async () => {
+    function showToast(msg) {
+      toastMessage.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    togglePassword.addEventListener("change", () => {
+      password.type = togglePassword.checked ? "text" : "password";
+    });
+
+    resetPassword.addEventListener("click", async (e) => {
+      e.preventDefault();
       if (!email.value) {
-        alert("Please enter your email to reset password.");
+        showToast("Please enter your email");
         return;
       }
       try {
         await sendPasswordResetEmail(auth, email.value);
-        alert("Password reset link sent to your email.");
+        showToast("Password reset email sent");
       } catch (error) {
-        alert("Error: " + error.message);
+        showToast(error.message);
       }
     });
 
-    submitBtn.addEventListener("click", async () => {
-      const emailVal = email.value.trim();
-      const passwordVal = password.value.trim();
-
-      if (!emailVal || !passwordVal) return alert("Fill in all required fields");
-
-      if (isLogin.mode) {
-        // Login
-        try {
-          await signInWithEmailAndPassword(auth, emailVal, passwordVal);
-          window.location.href = "index.html";
-        } catch (error) {
-          alert("Login failed: " + error.message);
-        }
-      } else {
-        // Signup
-        const first = firstName.value.trim();
-        const last = lastName.value.trim();
-        const phone = mobile.value.trim();
-        if (!first || !last || !phone) return alert("Please fill in all profile fields");
-
-        try {
-          const userCredential = await createUserWithEmailAndPassword(auth, emailVal, passwordVal);
-          const uid = userCredential.user.uid;
-
-          await setDoc(doc(db, "users", uid), {
-            firstName: first,
-            lastName: last,
-            email: emailVal,
-            mobile: phone,
-            createdAt: new Date().toISOString()
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        if (isSignup) {
+          const userCred = await createUserWithEmailAndPassword(auth, email.value, password.value);
+          await setDoc(doc(db, "users", userCred.user.uid), {
+            firstName: firstName.value,
+            lastName: lastName.value,
+            mobile: mobile.value
           });
-
-          window.location.href = "index.html";
-        } catch (error) {
-          alert("Signup failed: " + error.message);
+        } else {
+          await signInWithEmailAndPassword(auth, email.value, password.value);
         }
+        location.href = "index.html";
+      } catch (error) {
+        showToast(error.message);
       }
     });
   </script>
