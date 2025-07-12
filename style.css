@@ -29,6 +29,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .logo-section {
@@ -81,7 +82,6 @@ body {
   background-color: #dc2626;
 }
 
-/* Inline Action Buttons */
 .save-btn, .edit-btn, .cancel-btn, .delete-btn {
   font-size: 0.85rem;
   margin: 0 2px;
@@ -212,7 +212,7 @@ body {
   margin-right: 4px;
 }
 
-/* Dropdown Profile Menu */
+/* Dropdown */
 .dropdown {
   position: relative;
   display: inline-block;
@@ -282,4 +282,64 @@ body {
   border: none;
   margin-left: 1rem;
   cursor: pointer;
+}
+
+/* Profile Modal */
+.profile-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  z-index: 2000;
+  max-width: 400px;
+  width: 100%;
+  display: none;
+}
+
+.profile-modal.active {
+  display: block;
+}
+
+.profile-modal h2 {
+  margin-bottom: 1rem;
+}
+
+.profile-modal .input-group {
+  margin-bottom: 1rem;
+}
+
+.profile-modal .btn {
+  width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-content,
+  .stats-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stat-card {
+    width: 100%;
+  }
+
+  .form-card, .table-card {
+    padding: 1rem;
+  }
+
+  .table th, .table td {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+  }
+
+  .dropdown-content {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
