@@ -1,54 +1,75 @@
-// auth.js
+// auth.js (module)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-// Load users from localStorage
-function getUsers() {
-  return JSON.parse(localStorage.getItem('users')) || [];
-}
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
+  authDomain: "water-bottle-tracker-43537.firebaseapp.com",
+  projectId: "water-bottle-tracker-43537",
+  storageBucket: "water-bottle-tracker-43537.appspot.com",
+  messagingSenderId: "424777349690",
+  appId: "1:424777349690:web:54056417c24cd2f0329303",
+  measurementId: "G-ZKGP7LC80E"
+};
 
-// Save users to localStorage
-function saveUsers(users) {
-  localStorage.setItem('users', JSON.stringify(users));
-}
+// Init Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-// Signup form handler
-const signupForm = document.getElementById('signupForm');
+// Signup
+const signupForm = document.getElementById("signupForm");
 if (signupForm) {
-  signupForm.addEventListener('submit', function (e) {
+  signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value.trim();
+    const email = document.getElementById("signupEmail").value;
+    const password = document.getElementById("signupPassword").value;
 
-    const users = getUsers();
-    const existingUser = users.find(u => u.email === email);
-
-    if (existingUser) {
-      alert('Account already exists with this email.');
-      return;
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert("Account created successfully!");
+      window.location.href = "index.html";
+    } catch (error) {
+      alert(error.message);
     }
-
-    users.push({ email, password });
-    saveUsers(users);
-    localStorage.setItem('currentUser', email);
-    window.location.href = 'index.html';
   });
 }
 
-// Login form handler
-const loginForm = document.getElementById('loginForm');
+// Login
+const loginForm = document.getElementById("loginForm");
 if (loginForm) {
-  loginForm.addEventListener('submit', function (e) {
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
 
-    const users = getUsers();
-    const user = users.find(u => u.email === email && u.password === password);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      localStorage.setItem("currentUser", email);
+      window.location.href = "index.html";
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+}
 
-    if (user) {
-      localStorage.setItem('currentUser', email);
-      window.location.href = 'index.html';
-    } else {
-      alert('Invalid email or password');
+// Password Reset
+const resetForm = document.getElementById("resetForm");
+if (resetForm) {
+  resetForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("resetEmail").value;
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert("Password reset email sent!");
+    } catch (error) {
+      alert(error.message);
     }
   });
 }
