@@ -4,8 +4,80 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reset Password - Water Bottle Tracker</title>
-  <link rel="stylesheet" href="auth.css" />
+  <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="logo.png" />
+  <style>
+    .auth-container {
+      max-width: 400px;
+      margin: 60px auto;
+      background: white;
+      padding: 32px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .auth-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #1f2937;
+    }
+
+    .auth-container form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .auth-container input {
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+    }
+
+    .auth-container button {
+      padding: 12px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .auth-container button:hover {
+      background: #2563eb;
+    }
+
+    .auth-container p {
+      font-size: 14px;
+      text-align: center;
+      color: #6b7280;
+    }
+
+    .auth-container a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+
+    .auth-container a:hover {
+      text-decoration: underline;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
 </head>
 <body>
   <div class="auth-container">
@@ -13,9 +85,66 @@
     <form id="resetForm">
       <input type="email" id="resetEmail" placeholder="Enter your email" required />
       <button type="submit">Send Reset Link</button>
+      <div id="message" class="message"></div>
     </form>
     <p>Back to <a href="login.html">Login</a></p>
   </div>
-  <script type="module" src="auth.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import {
+      getAuth,
+      sendPasswordResetEmail,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
+      authDomain: "water-bottle-tracker-43537.firebaseapp.com",
+      projectId: "water-bottle-tracker-43537",
+      storageBucket: "water-bottle-tracker-43537.appspot.com",
+      messagingSenderId: "424777349690",
+      appId: "1:424777349690:web:54056417c24cd2f0329303"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const form = document.getElementById("resetForm");
+    const emailInput = document.getElementById("resetEmail");
+    const message = document.getElementById("message");
+
+    // Prevent access if already logged in
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        window.location.href = "index.html";
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      message.textContent = "";
+      message.className = "message";
+
+      const email = emailInput.value.trim();
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        message.textContent = "Reset link sent! Check your email.";
+        message.classList.add("success");
+        emailInput.value = "";
+      } catch (err) {
+        console.error(err);
+        if (err.code === "auth/user-not-found") {
+          message.textContent = "No account found with this email.";
+        } else if (err.code === "auth/invalid-email") {
+          message.textContent = "Invalid email address.";
+        } else {
+          message.textContent = "Something went wrong. Please try again.";
+        }
+        message.classList.add("error");
+      }
+    });
+  </script>
 </body>
 </html>
