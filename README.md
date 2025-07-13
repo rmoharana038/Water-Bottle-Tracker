@@ -1,72 +1,66 @@
-# Water Bottle Tracker - Standalone Website
+# Water Bottle Tracker - Firebase Web App
 
-Complete HTML, CSS, and JavaScript files for the Water Bottle Tracker application.
+Track your daily water bottle usage with real-time syncing, secure login, and offline support.
 
-## Files Included
+## 🔥 Live Demo
 
-- `index.html` - Main HTML structure
-- `style.css` - Complete styling and responsive design
-- `script.js` - Full JavaScript functionality
-- `manifest.json` - PWA manifest for app installation
-- `sw.js` - Service worker for offline functionality
-- `logo.png` - App icon/logo
+Hosted on GitHub Pages: [https://rmoharana038.github.io/Water-Bottle-Tracker](https://rmoharana038.github.io/Water-Bottle-Tracker)
 
-## Features
+## 📁 Files Included
 
-- **Track Water Bottles**: Add entries with automatic cost calculation (₹40 per bottle)
-- **Statistics Dashboard**: View total bottles, amount spent, and entry count
-- **Edit & Delete**: Modify or remove entries inline
-- **Export Options**: Download data as CSV or generate PDF
-- **Offline Support**: Works without internet connection
-- **Mobile Installable**: Can be installed as app on phones
-- **Responsive Design**: Works on all device sizes
+- `index.html` - Main app interface (protected)
+- `login.html` - Login, Signup, and Password Reset (combined)
+- `style.css` - Styling for both tracker and auth pages
+- `script.js` - Tracker logic with Firestore integration
+- `firebase-init.js` - Firebase configuration (Auth + Firestore)
+- `manifest.json` - PWA manifest for mobile installation
+- `sw.js` - Service Worker for offline access
+- `logo.png` - App logo/icon
 
-## How to Use
+## 🚀 Features
 
-1. **Download all files** to a folder on your computer
-2. **Open `index.html`** in any web browser
-3. **Start tracking** your water bottle consumption
+- ✅ **Firebase Auth** – Login, Signup & Password Reset
+- 🗂 **Per-user Data** – Each user has private entries in Firestore
+- 📊 **Dashboard** – View total bottles, amount, and entries
+- 📝 **Edit/Delete** – Inline editing and deleting
+- 📤 **Export** – CSV download and print-ready PDF
+- 📶 **Offline Support** – Works without internet (PWA)
+- 📱 **Installable** – Add to Home Screen (PWA)
+- 💻 **Responsive** – Works on mobile, tablet, desktop
 
-## Installation as Mobile App
+## 🔐 How to Use
 
-1. **Open the website** in Chrome on your phone
-2. **Tap "Install"** when prompted (or use "Add to Home Screen")
-3. **App will be added** to your home screen
+1. **Open `login.html`** and sign up or log in
+2. After login, you are redirected to `index.html`
+3. Add water bottle entries, view stats, and export data
 
-## Technical Details
+## 📱 Installation as App
 
-- **Pure HTML/CSS/JS** - No frameworks required
-- **Local Storage** - Data saved in browser
-- **PWA Ready** - Installable as mobile app
-- **Offline Capable** - Works without internet
-- **Responsive** - Mobile-friendly design
+1. Open site in Chrome on Android
+2. Tap the **Install** prompt or “Add to Home Screen”
+3. It installs like a native app
 
-## Customization
+## 🛠 Tech Stack
 
-You can easily customize:
-- **Colors**: Edit CSS variables in `style.css`
-- **Bottle Price**: Change the `* 40` calculation in `script.js`
-- **Currency**: Replace `₹` with your currency symbol
-- **Logo**: Replace `logo.png` with your own image
+- **Firebase** (Auth + Firestore)
+- **HTML, CSS, JS** (No frameworks)
+- **PWA** support (manifest + service worker)
 
-## Browser Support
+## ⚙️ Customization
 
-- Chrome/Edge (recommended)
-- Firefox
-- Safari
-- All modern mobile browsers
+- 💰 Change bottle price: Edit `amount: bottles * 40` in `script.js`
+- 🪙 Change currency: Replace all `₹` with your symbol
+- 🎨 Change styles: Edit `style.css`
+- 🖼 Update logo: Replace `logo.png`
 
-## File Structure
+## 🔒 Firebase Rules (Recommended)
 
-```
-water-bottle-tracker/
-├── index.html          # Main HTML file
-├── style.css           # Styling
-├── script.js           # JavaScript functionality
-├── manifest.json       # PWA manifest
-├── sw.js              # Service worker
-├── logo.png           # App icon
-└── README.md          # This file
-```
-
-Just open `index.html` in your browser to start using the app!
+```js
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /entries/{entryId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
+    }
+  }
+}
