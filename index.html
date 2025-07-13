@@ -3,23 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Water Bottle Tracker</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#3B82F6" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="logo.png" />
+  <link rel="icon" type="image/png" href="logo.png"/>
+  <title>Water Bottle Tracker</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <header class="header">
     <div class="container header-content">
       <div class="logo-section">
-        <img src="logo.png" alt="Logo" class="logo-icon" />
+        <img src="logo.png" alt="Logo" class="logo-icon"/>
         <div class="logo-text">
           <h1>Water Bottle Tracker</h1>
-          <p>Track your bottles and spending</p>
+          <p>Track your daily bottle usage</p>
         </div>
       </div>
       <div class="header-actions">
-        <span id="userFullName" style="margin-right: 12px; font-weight: 500;"></span>
+        <span id="userFullName" style="font-weight: 600; margin-right: 12px;"></span>
         <button class="btn btn-outline" onclick="logout()">Logout</button>
       </div>
     </div>
@@ -39,7 +40,7 @@
         <div class="stat-icon green">💰</div>
         <div class="stat-content">
           <div class="stat-number" id="totalAmount">₹0</div>
-          <div class="stat-label">Total Spent</div>
+          <div class="stat-label">Total Amount</div>
         </div>
       </div>
       <div class="stat-card">
@@ -54,28 +55,35 @@
     <!-- Entry Form -->
     <div class="form-card">
       <div class="form-header">
-        <h2>Add Bottle Entry</h2>
-        <div><strong id="currentMonth">Month Year</strong></div>
+        <h2>Track Bottles - <span id="currentMonth"></span></h2>
+        <div class="header-actions">
+          <button class="btn btn-outline" id="clearAll">Clear All</button>
+          <button class="btn btn-primary" id="addEntry">Add Entry</button>
+        </div>
       </div>
       <div class="form-content">
         <div class="input-group">
           <label for="bottleCount">Number of Bottles</label>
           <div class="input-wrapper">
-            <input type="number" id="bottleCount" placeholder="e.g., 3" />
+            <input type="number" id="bottleCount" placeholder="Enter count" min="1"/>
           </div>
         </div>
-        <button class="btn btn-primary" id="addEntry">Add Entry</button>
       </div>
     </div>
 
-    <!-- Table Card -->
+    <!-- Table -->
     <div class="table-card">
       <div class="table-header">
         <h2>Entries</h2>
-        <p class="table-subtitle">All bottle purchase records</p>
+        <p class="table-subtitle">Your tracked water usage history</p>
+        <div class="header-actions" style="margin-top: 10px;">
+          <button class="btn btn-outline" id="exportExcel">Export CSV</button>
+          <button class="btn btn-outline" id="exportPDF">Export PDF</button>
+        </div>
       </div>
+
       <div class="table-container">
-        <table class="table" id="entriesTable" style="display: none;">
+        <table class="table" id="entriesTable">
           <thead>
             <tr>
               <th>#</th>
@@ -88,30 +96,25 @@
           </thead>
           <tbody id="entryTableBody"></tbody>
         </table>
-        <div class="empty-state" id="emptyState" style="display: none;">
-          <div class="empty-icon">🗒️</div>
-          <h3>No entries yet</h3>
-          <p>Start tracking your bottle usage by adding an entry above.</p>
+
+        <div id="emptyState" class="empty-state" style="display:none;">
+          <div class="empty-icon">🧃</div>
+          <h3>No Entries Yet</h3>
+          <p>Start tracking your water bottle usage by adding your first entry.</p>
         </div>
       </div>
-    </div>
-
-    <!-- Footer Buttons -->
-    <div style="margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap;">
-      <button class="btn btn-outline" id="exportExcel">Export CSV</button>
-      <button class="btn btn-outline" id="exportPDF">Export PDF</button>
-      <button class="btn btn-danger" id="clearAll">Clear All Entries</button>
     </div>
   </main>
 
   <!-- Toast -->
-  <div class="toast" id="toast">
+  <div id="toast" class="toast">
     <div class="toast-content">
-      <span id="toastMessage">Message here</span>
-      <button class="toast-close" id="toastClose">&times;</button>
+      <span id="toastMessage">Message</span>
+      <button id="toastClose" class="toast-close">&times;</button>
     </div>
   </div>
 
+  <!-- Script -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
