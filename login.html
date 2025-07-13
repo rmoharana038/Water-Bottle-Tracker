@@ -2,126 +2,236 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login | Water Bottle Tracker</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Water Bottle Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="logo.png" />
   <style>
     .auth-container {
       max-width: 400px;
-      margin: 40px auto;
+      margin: 60px auto;
       background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
+      padding: 32px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     }
     .auth-container h2 {
-      margin-bottom: 1rem;
       text-align: center;
-      color: #3b82f6;
+      margin-bottom: 20px;
+      color: #1f2937;
+    }
+    .auth-container form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
     .auth-container input {
-      width: 100%;
-      margin-bottom: 1rem;
-      padding: 10px;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #d1d5db;
       border-radius: 6px;
-      border: 1px solid #ccc;
     }
-    .auth-container .toggle {
+    .auth-container button {
+      padding: 12px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .auth-container button:hover {
+      background: #2563eb;
+    }
+    .auth-container p {
+      font-size: 14px;
       text-align: center;
+      color: #6b7280;
+    }
+    .auth-container a {
       color: #3b82f6;
-      cursor: pointer;
-      margin-top: 1rem;
+      text-decoration: none;
     }
-    .auth-container .btn-primary {
-      width: 100%;
-    }
-    .password-wrapper {
-      position: relative;
-    }
-    .toggle-password {
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      cursor: pointer;
-      font-size: 14px;
-      color: #555;
-    }
-    .link {
-      font-size: 14px;
-      color: #3b82f6;
+    .auth-container a:hover {
       text-decoration: underline;
-      cursor: pointer;
-      text-align: right;
+    }
+    .error-message {
+      color: red;
+      font-size: 14px;
+      text-align: center;
+    }
+    .success-message {
+      color: green;
+      font-size: 14px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <main class="auth-container" id="authBox">
+  <div class="auth-container">
     <h2 id="formTitle">Login</h2>
-    <input type="email" id="email" placeholder="Email" />
-    
-    <div class="password-wrapper">
-      <input type="password" id="password" placeholder="Password" />
-      <span class="toggle-password" onclick="togglePassword()">👁️</span>
-    </div>
 
-    <button class="btn btn-primary" onclick="handleAuth()">Login</button>
-    <div class="link" onclick="resetPassword()">Forgot Password?</div>
-    <div class="toggle" onclick="toggleMode()">Switch to Signup</div>
-  </main>
+    <form id="authForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <div id="confirmPasswordWrapper" style="display: none;">
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+      </div>
+      <button type="submit" id="submitBtn">Login</button>
+      <div id="message" class="error-message"></div>
+    </form>
+
+    <p>
+      <a href="#" id="toggleMode">Don't have an account? Sign Up</a>
+      <br />
+      <a href="#" id="forgotPassword">Forgot Password?</a>
+    </p>
+
+    <div id="resetSection" style="display: none;">
+      <h2>Reset Password</h2>
+      <form id="resetForm">
+        <input type="email" id="resetEmail" placeholder="Enter your email" required />
+        <button type="submit">Send Reset Link</button>
+        <div id="resetMessage" class="success-message"></div>
+      </form>
+      <p><a href="#" id="backToLogin">← Back to Login</a></p>
+    </div>
+  </div>
 
   <script type="module">
-    import { auth } from './firebase-init.js';
-    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      sendPasswordResetEmail,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-    let mode = 'login';
-
-    window.toggleMode = function () {
-      mode = mode === 'login' ? 'signup' : 'login';
-      document.getElementById('formTitle').textContent = mode === 'login' ? 'Login' : 'Signup';
-      document.querySelector('.btn-primary').textContent = mode === 'login' ? 'Login' : 'Signup';
-      document.querySelector('.toggle').textContent = mode === 'login' ? 'Switch to Signup' : 'Switch to Login';
-      document.querySelector('.link').style.display = mode === 'login' ? 'block' : 'none';
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
+      authDomain: "water-bottle-tracker-43537.firebaseapp.com",
+      projectId: "water-bottle-tracker-43537",
+      storageBucket: "water-bottle-tracker-43537.appspot.com",
+      messagingSenderId: "424777349690",
+      appId: "1:424777349690:web:54056417c24cd2f0329303"
     };
 
-    window.handleAuth = async function () {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-      if (!email || !password) {
-        alert('Please fill in all fields');
-        return;
+    // Redirect if already logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) window.location.href = "index.html";
+    });
+
+    // DOM Elements
+    const formTitle = document.getElementById("formTitle");
+    const authForm = document.getElementById("authForm");
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirmPassword");
+    const confirmPasswordWrapper = document.getElementById("confirmPasswordWrapper");
+    const submitBtn = document.getElementById("submitBtn");
+    const toggleMode = document.getElementById("toggleMode");
+    const message = document.getElementById("message");
+    const forgotPassword = document.getElementById("forgotPassword");
+    const resetSection = document.getElementById("resetSection");
+    const resetForm = document.getElementById("resetForm");
+    const resetEmail = document.getElementById("resetEmail");
+    const resetMessage = document.getElementById("resetMessage");
+    const backToLogin = document.getElementById("backToLogin");
+
+    let isSignup = false;
+
+    toggleMode.addEventListener("click", () => {
+      isSignup = !isSignup;
+      formTitle.textContent = isSignup ? "Sign Up" : "Login";
+      submitBtn.textContent = isSignup ? "Create Account" : "Login";
+      toggleMode.textContent = isSignup
+        ? "Already have an account? Login"
+        : "Don't have an account? Sign Up";
+      confirmPasswordWrapper.style.display = isSignup ? "block" : "none";
+      resetSection.style.display = "none";
+      authForm.style.display = "block";
+      message.textContent = "";
+    });
+
+    authForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      message.textContent = "";
+
+      const emailVal = email.value.trim();
+      const passwordVal = password.value.trim();
+
+      if (isSignup) {
+        const confirmVal = confirmPassword.value.trim();
+        if (passwordVal !== confirmVal) {
+          message.textContent = "Passwords do not match.";
+          return;
+        }
+
+        try {
+          await createUserWithEmailAndPassword(auth, emailVal, passwordVal);
+          window.location.href = "index.html";
+        } catch (err) {
+          if (err.code === "auth/email-already-in-use") {
+            message.textContent = "Email already in use.";
+          } else if (err.code === "auth/invalid-email") {
+            message.textContent = "Invalid email.";
+          } else if (err.code === "auth/weak-password") {
+            message.textContent = "Password must be at least 6 characters.";
+          } else {
+            message.textContent = "Signup failed.";
+          }
+        }
+      } else {
+        try {
+          await signInWithEmailAndPassword(auth, emailVal, passwordVal);
+          window.location.href = "index.html";
+        } catch (err) {
+          if (err.code === "auth/user-not-found") {
+            message.textContent = "No account found.";
+          } else if (err.code === "auth/wrong-password") {
+            message.textContent = "Wrong password.";
+          } else {
+            message.textContent = "Login failed.";
+          }
+        }
       }
+    });
+
+    forgotPassword.addEventListener("click", () => {
+      resetSection.style.display = "block";
+      authForm.style.display = "none";
+      message.textContent = "";
+      resetMessage.textContent = "";
+    });
+
+    backToLogin.addEventListener("click", () => {
+      resetSection.style.display = "none";
+      authForm.style.display = "block";
+      resetMessage.textContent = "";
+    });
+
+    resetForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      resetMessage.textContent = "";
+      const emailVal = resetEmail.value.trim();
 
       try {
-        if (mode === 'login') {
-          await signInWithEmailAndPassword(auth, email, password);
+        await sendPasswordResetEmail(auth, emailVal);
+        resetMessage.textContent = "Reset link sent to your email.";
+      } catch (err) {
+        if (err.code === "auth/user-not-found") {
+          resetMessage.textContent = "No account with this email.";
+        } else if (err.code === "auth/invalid-email") {
+          resetMessage.textContent = "Invalid email.";
         } else {
-          await createUserWithEmailAndPassword(auth, email, password);
-        }
-        window.location.href = 'index.html';
-      } catch (error) {
-        alert(error.message);
-      }
-    };
-
-    window.resetPassword = async function () {
-      const email = prompt('Enter your email to receive reset link:');
-      if (email) {
-        try {
-          await sendPasswordResetEmail(auth, email);
-          alert('Reset link sent to your email.');
-        } catch (error) {
-          alert(error.message);
+          resetMessage.textContent = "Error sending reset email.";
         }
       }
-    };
-
-    window.togglePassword = function () {
-      const passwordInput = document.getElementById('password');
-      passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
-    };
+    });
   </script>
 </body>
 </html>
