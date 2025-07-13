@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login - Water Bottle Tracker</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="logo.png" />
@@ -15,22 +15,26 @@
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     }
+
     .auth-container h2 {
       text-align: center;
       margin-bottom: 20px;
       color: #1f2937;
     }
+
     .auth-container form {
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
+
     .auth-container input {
       padding: 12px;
       font-size: 16px;
       border: 1px solid #d1d5db;
       border-radius: 6px;
     }
+
     .auth-container button {
       padding: 12px;
       background: #3b82f6;
@@ -40,61 +44,80 @@
       cursor: pointer;
       font-size: 16px;
     }
+
     .auth-container button:hover {
       background: #2563eb;
     }
+
     .auth-container p {
       font-size: 14px;
       text-align: center;
       color: #6b7280;
     }
+
     .auth-container a {
       color: #3b82f6;
       text-decoration: none;
     }
+
     .auth-container a:hover {
       text-decoration: underline;
     }
-    .error-message {
-      color: red;
+
+    .error-message, .message {
       font-size: 14px;
       text-align: center;
     }
-    .success-message {
+
+    .error-message {
+      color: red;
+    }
+
+    .success {
       color: green;
-      font-size: 14px;
-      text-align: center;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
   <div class="auth-container">
-    <h2 id="formTitle">Login</h2>
+    <!-- Login Form -->
+    <div id="loginFormWrapper">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email" required />
+        <input type="password" id="loginPassword" placeholder="Password" required />
+        <button type="submit">Login</button>
+        <div id="loginError" class="error-message"></div>
+      </form>
+      <p>Don't have an account? <a href="#" id="showSignup">Sign up</a></p>
+      <p><a href="#" id="showReset">Forgot Password?</a></p>
+    </div>
 
-    <form id="authForm">
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Password" required />
-      <div id="confirmPasswordWrapper" style="display: none;">
-        <input type="password" id="confirmPassword" placeholder="Confirm Password" />
-      </div>
-      <button type="submit" id="submitBtn">Login</button>
-      <div id="message" class="error-message"></div>
-    </form>
+    <!-- Signup Form -->
+    <div id="signupFormWrapper" class="hidden">
+      <h2>Sign Up</h2>
+      <form id="signupForm">
+        <input type="email" id="signupEmail" placeholder="Email" required />
+        <input type="password" id="signupPassword" placeholder="Password (min 6 characters)" required />
+        <button type="submit">Create Account</button>
+        <div id="signupError" class="error-message"></div>
+      </form>
+      <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
+    </div>
 
-    <p>
-      <a href="#" id="toggleMode">Don't have an account? Sign Up</a>
-      <br />
-      <a href="#" id="forgotPassword">Forgot Password?</a>
-    </p>
-
-    <div id="resetSection" style="display: none;">
+    <!-- Reset Password Form -->
+    <div id="resetFormWrapper" class="hidden">
       <h2>Reset Password</h2>
       <form id="resetForm">
         <input type="email" id="resetEmail" placeholder="Enter your email" required />
         <button type="submit">Send Reset Link</button>
-        <div id="resetMessage" class="success-message"></div>
+        <div id="resetMessage" class="message"></div>
       </form>
-      <p><a href="#" id="backToLogin">← Back to Login</a></p>
+      <p>Remembered your password? <a href="#" id="showLogin">Login</a></p>
     </div>
   </div>
 
@@ -121,115 +144,114 @@
     const auth = getAuth(app);
 
     // Redirect if already logged in
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, user => {
       if (user) window.location.href = "index.html";
     });
 
-    // DOM Elements
-    const formTitle = document.getElementById("formTitle");
-    const authForm = document.getElementById("authForm");
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
-    const confirmPassword = document.getElementById("confirmPassword");
-    const confirmPasswordWrapper = document.getElementById("confirmPasswordWrapper");
-    const submitBtn = document.getElementById("submitBtn");
-    const toggleMode = document.getElementById("toggleMode");
-    const message = document.getElementById("message");
-    const forgotPassword = document.getElementById("forgotPassword");
-    const resetSection = document.getElementById("resetSection");
-    const resetForm = document.getElementById("resetForm");
-    const resetEmail = document.getElementById("resetEmail");
-    const resetMessage = document.getElementById("resetMessage");
-    const backToLogin = document.getElementById("backToLogin");
+    // Toggle form views
+    const showLogin = () => {
+      loginFormWrapper.style.display = "block";
+      signupFormWrapper.style.display = "none";
+      resetFormWrapper.style.display = "none";
+    };
+    const showSignup = () => {
+      loginFormWrapper.style.display = "none";
+      signupFormWrapper.style.display = "block";
+      resetFormWrapper.style.display = "none";
+    };
+    const showReset = () => {
+      loginFormWrapper.style.display = "none";
+      signupFormWrapper.style.display = "none";
+      resetFormWrapper.style.display = "block";
+    };
 
-    let isSignup = false;
-
-    toggleMode.addEventListener("click", () => {
-      isSignup = !isSignup;
-      formTitle.textContent = isSignup ? "Sign Up" : "Login";
-      submitBtn.textContent = isSignup ? "Create Account" : "Login";
-      toggleMode.textContent = isSignup
-        ? "Already have an account? Login"
-        : "Don't have an account? Sign Up";
-      confirmPasswordWrapper.style.display = isSignup ? "block" : "none";
-      resetSection.style.display = "none";
-      authForm.style.display = "block";
-      message.textContent = "";
+    document.getElementById("showSignup").addEventListener("click", (e) => {
+      e.preventDefault();
+      showSignup();
+    });
+    document.getElementById("showLogin").addEventListener("click", (e) => {
+      e.preventDefault();
+      showLogin();
+    });
+    document.getElementById("showReset").addEventListener("click", (e) => {
+      e.preventDefault();
+      showReset();
     });
 
-    authForm.addEventListener("submit", async (e) => {
+    // Login logic
+    const loginForm = document.getElementById("loginForm");
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      message.textContent = "";
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const loginError = document.getElementById("loginError");
+      loginError.textContent = "";
 
-      const emailVal = email.value.trim();
-      const passwordVal = password.value.trim();
-
-      if (isSignup) {
-        const confirmVal = confirmPassword.value.trim();
-        if (passwordVal !== confirmVal) {
-          message.textContent = "Passwords do not match.";
-          return;
-        }
-
-        try {
-          await createUserWithEmailAndPassword(auth, emailVal, passwordVal);
-          window.location.href = "index.html";
-        } catch (err) {
-          if (err.code === "auth/email-already-in-use") {
-            message.textContent = "Email already in use.";
-          } else if (err.code === "auth/invalid-email") {
-            message.textContent = "Invalid email.";
-          } else if (err.code === "auth/weak-password") {
-            message.textContent = "Password must be at least 6 characters.";
-          } else {
-            message.textContent = "Signup failed.";
-          }
-        }
-      } else {
-        try {
-          await signInWithEmailAndPassword(auth, emailVal, passwordVal);
-          window.location.href = "index.html";
-        } catch (err) {
-          if (err.code === "auth/user-not-found") {
-            message.textContent = "No account found.";
-          } else if (err.code === "auth/wrong-password") {
-            message.textContent = "Wrong password.";
-          } else {
-            message.textContent = "Login failed.";
-          }
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = "index.html";
+      } catch (err) {
+        console.error(err);
+        if (err.code === "auth/wrong-password") {
+          loginError.textContent = "Incorrect password.";
+        } else if (err.code === "auth/user-not-found") {
+          loginError.textContent = "No account found with this email.";
+        } else {
+          loginError.textContent = "Login failed. Try again.";
         }
       }
     });
 
-    forgotPassword.addEventListener("click", () => {
-      resetSection.style.display = "block";
-      authForm.style.display = "none";
-      message.textContent = "";
-      resetMessage.textContent = "";
-    });
-
-    backToLogin.addEventListener("click", () => {
-      resetSection.style.display = "none";
-      authForm.style.display = "block";
-      resetMessage.textContent = "";
-    });
-
-    resetForm.addEventListener("submit", async (e) => {
+    // Signup logic
+    const signupForm = document.getElementById("signupForm");
+    signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      resetMessage.textContent = "";
-      const emailVal = resetEmail.value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const password = document.getElementById("signupPassword").value;
+      const signupError = document.getElementById("signupError");
+      signupError.textContent = "";
 
       try {
-        await sendPasswordResetEmail(auth, emailVal);
-        resetMessage.textContent = "Reset link sent to your email.";
+        await createUserWithEmailAndPassword(auth, email, password);
+        window.location.href = "index.html";
       } catch (err) {
-        if (err.code === "auth/user-not-found") {
-          resetMessage.textContent = "No account with this email.";
+        console.error(err);
+        if (err.code === "auth/email-already-in-use") {
+          signupError.textContent = "Email already in use. Try logging in.";
         } else if (err.code === "auth/invalid-email") {
-          resetMessage.textContent = "Invalid email.";
+          signupError.textContent = "Invalid email format.";
+        } else if (err.code === "auth/weak-password") {
+          signupError.textContent = "Password must be at least 6 characters.";
         } else {
-          resetMessage.textContent = "Error sending reset email.";
+          signupError.textContent = "Signup failed. Please try again.";
         }
+      }
+    });
+
+    // Reset password logic
+    const resetForm = document.getElementById("resetForm");
+    resetForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("resetEmail").value.trim();
+      const message = document.getElementById("resetMessage");
+      message.textContent = "";
+      message.className = "message";
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        message.textContent = "Reset link sent! Check your email.";
+        message.classList.add("success");
+        resetForm.reset();
+      } catch (err) {
+        console.error(err);
+        if (err.code === "auth/user-not-found") {
+          message.textContent = "No account found with this email.";
+        } else if (err.code === "auth/invalid-email") {
+          message.textContent = "Invalid email address.";
+        } else {
+          message.textContent = "Something went wrong. Try again.";
+        }
+        message.classList.add("error-message");
       }
     });
   </script>
