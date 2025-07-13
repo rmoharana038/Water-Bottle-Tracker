@@ -12,28 +12,102 @@
   <header class="header">
     <div class="container header-content">
       <div class="logo-section">
-        <div class="logo-icon">💧</div>
+        <img src="logo.png" alt="Logo" class="logo-icon" />
         <div class="logo-text">
           <h1>Water Bottle Tracker</h1>
-          <p>Track bottles & expenses</p>
+          <p>Track your bottles and spending</p>
         </div>
       </div>
       <div class="header-actions">
-        <div id="userNameDisplay" style="margin-right: 16px; font-weight: 500;"></div>
+        <span id="userFullName" style="margin-right: 12px; font-weight: 500;"></span>
         <button class="btn btn-outline" onclick="logout()">Logout</button>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <!-- Your content like stats, forms, tables, etc. remains unchanged -->
-    <!-- ... -->
+    <!-- Stats -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-icon blue">💧</div>
+        <div class="stat-content">
+          <div class="stat-number" id="totalBottles">0</div>
+          <div class="stat-label">Total Bottles</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">💰</div>
+        <div class="stat-content">
+          <div class="stat-number" id="totalAmount">₹0</div>
+          <div class="stat-label">Total Spent</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple">📅</div>
+        <div class="stat-content">
+          <div class="stat-number" id="totalEntries">0</div>
+          <div class="stat-label">Total Entries</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry Form -->
+    <div class="form-card">
+      <div class="form-header">
+        <h2>Add Bottle Entry</h2>
+        <div><strong id="currentMonth">Month Year</strong></div>
+      </div>
+      <div class="form-content">
+        <div class="input-group">
+          <label for="bottleCount">Number of Bottles</label>
+          <div class="input-wrapper">
+            <input type="number" id="bottleCount" placeholder="e.g., 3" />
+          </div>
+        </div>
+        <button class="btn btn-primary" id="addEntry">Add Entry</button>
+      </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="table-card">
+      <div class="table-header">
+        <h2>Entries</h2>
+        <p class="table-subtitle">All bottle purchase records</p>
+      </div>
+      <div class="table-container">
+        <table class="table" id="entriesTable" style="display: none;">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Bottles</th>
+              <th>Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="entryTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <div class="empty-icon">🗒️</div>
+          <h3>No entries yet</h3>
+          <p>Start tracking your bottle usage by adding an entry above.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div style="margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap;">
+      <button class="btn btn-outline" id="exportExcel">Export CSV</button>
+      <button class="btn btn-outline" id="exportPDF">Export PDF</button>
+      <button class="btn btn-danger" id="clearAll">Clear All Entries</button>
+    </div>
   </main>
 
-  <!-- Toast Notification -->
+  <!-- Toast -->
   <div class="toast" id="toast">
     <div class="toast-content">
-      <span id="toastMessage">Message</span>
+      <span id="toastMessage">Message here</span>
       <button class="toast-close" id="toastClose">&times;</button>
     </div>
   </div>
