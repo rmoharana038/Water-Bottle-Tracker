@@ -42,7 +42,7 @@ const userFullNameElement = document.getElementById('userFullName');
 let entries = [];
 let editingId = null;
 
-// Auth check
+// Firebase Auth check
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "login.html";
@@ -56,26 +56,21 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// Show user full name
 async function displayUserName(uid) {
   try {
-    console.log("Fetching user full name for UID:", uid);
     const userDoc = await getDoc(doc(db, "users", uid));
     if (userDoc.exists()) {
       const { firstName, lastName } = userDoc.data();
-      console.log("User name fetched:", firstName, lastName);
       if (userFullNameElement) {
         userFullNameElement.textContent = `${firstName} ${lastName}`;
       }
-    } else {
-      console.warn("User doc not found in Firestore");
     }
   } catch (error) {
     console.error("Error fetching user name:", error);
   }
 }
 
-// Events
+// Button events
 toastClose.addEventListener('click', hideToast);
 addBtn.addEventListener('click', addEntry);
 clearBtn.addEventListener('click', clearAllEntries);
@@ -147,7 +142,7 @@ function renderEntries() {
       <td>${formatTime(entry.time)}</td>
       <td>${entry.bottles}</td>
       <td>₹${entry.amount}</td>
-      <td>
+      <td class="actions">
         <button class="edit-btn" onclick="startEdit('${entry.id}')">Edit</button>
         <button class="delete-btn" onclick="deleteEntry('${entry.id}')">Delete</button>
       </td>
@@ -170,7 +165,7 @@ window.startEdit = function (id) {
     <td><input type="time" id="editTime" value="${entry.time}"></td>
     <td><input type="number" id="editBottles" value="${entry.bottles}"></td>
     <td id="editAmount">₹${entry.amount}</td>
-    <td>
+    <td class="actions">
       <button class="save-btn" onclick="saveEdit()">Save</button>
       <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
     </td>
@@ -225,8 +220,7 @@ window.deleteEntry = async function (id) {
 
 async function clearAllEntries() {
   if (!confirm("Clear all entries? This cannot be undone.")) return;
-  const userEntries = entries.filter(e => e.uid === currentUser.uid);
-  for (let entry of userEntries) {
+  for (let entry of entries) {
     await deleteDoc(doc(db, "entries", entry.id));
   }
   entries = [];
@@ -238,10 +232,9 @@ async function clearAllEntries() {
 function updateStats() {
   const totalBottles = entries.reduce((sum, e) => sum + e.bottles, 0);
   const totalAmount = entries.reduce((sum, e) => sum + e.amount, 0);
-  const totalEntries = entries.length;
   totalBottlesElement.textContent = totalBottles;
   totalAmountElement.textContent = `₹${totalAmount}`;
-  totalEntriesElement.textContent = totalEntries;
+  totalEntriesElement.textContent = entries.length;
 }
 
 function exportToCSV() {
@@ -281,14 +274,17 @@ function exportToPDF() {
 function formatDate(d) {
   return new Date(d).toLocaleDateString('en-GB');
 }
+
 function formatTime(t) {
   return t;
 }
+
 function showToast(msg, type = 'info') {
   toastMessage.textContent = msg;
   toast.className = `toast show ${type}`;
   setTimeout(() => hideToast(), 3000);
 }
+
 function hideToast() {
   toast.classList.remove('show');
 }
