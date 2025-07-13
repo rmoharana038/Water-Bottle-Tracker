@@ -7,99 +7,21 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="logo.png" />
   <style>
-    .auth-container {
-      max-width: 400px;
-      margin: 60px auto;
-      background: white;
-      padding: 32px;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .auth-container h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #1f2937;
-    }
-
-    .auth-container form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .auth-container input {
-      padding: 12px;
-      font-size: 16px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-    }
-
-    .auth-container button {
-      padding: 12px;
-      background: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .auth-container button:hover {
-      background: #2563eb;
-    }
-
-    .auth-container p {
-      font-size: 14px;
-      text-align: center;
-      color: #6b7280;
-    }
-
-    .auth-container a {
-      color: #3b82f6;
-      text-decoration: none;
-    }
-
-    .auth-container a:hover {
-      text-decoration: underline;
-    }
-
-    .error-message, .message {
-      font-size: 14px;
-      text-align: center;
-    }
-
-    .error-message {
-      color: red;
-    }
-
-    .success {
-      color: green;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .password-wrapper {
-      position: relative;
-    }
-
-    .password-wrapper input {
-      width: 100%;
-      padding-right: 40px;
-    }
-
-    .toggle-password {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: pointer;
-      font-size: 18px;
-      user-select: none;
-      color: #6b7280;
-    }
+    .auth-container { max-width: 400px; margin: 60px auto; background: white; padding: 32px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); }
+    .auth-container h2 { text-align: center; margin-bottom: 20px; color: #1f2937; }
+    .auth-container form { display: flex; flex-direction: column; gap: 16px; }
+    .auth-container input { padding: 12px; font-size: 16px; border: 1px solid #d1d5db; border-radius: 6px; }
+    .password-wrapper { position: relative; }
+    .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; }
+    .auth-container button { padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    .auth-container button:hover { background: #2563eb; }
+    .auth-container p { font-size: 14px; text-align: center; color: #6b7280; }
+    .auth-container a { color: #3b82f6; text-decoration: none; }
+    .auth-container a:hover { text-decoration: underline; }
+    .error-message, .message { font-size: 14px; text-align: center; }
+    .error-message { color: red; }
+    .success { color: green; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -111,7 +33,7 @@
         <input type="email" id="loginEmail" placeholder="Email" required />
         <div class="password-wrapper">
           <input type="password" id="loginPassword" placeholder="Password" required />
-          <span class="toggle-password" id="toggleLoginPassword">👁️</span>
+          <span class="toggle-password" onclick="toggleVisibility('loginPassword')">👁️</span>
         </div>
         <button type="submit">Login</button>
         <div id="loginError" class="error-message"></div>
@@ -124,10 +46,12 @@
     <div id="signupFormWrapper" class="hidden">
       <h2>Sign Up</h2>
       <form id="signupForm">
+        <input type="text" id="firstName" placeholder="First Name" required />
+        <input type="text" id="lastName" placeholder="Last Name" required />
         <input type="email" id="signupEmail" placeholder="Email" required />
         <div class="password-wrapper">
           <input type="password" id="signupPassword" placeholder="Password (min 6 characters)" required />
-          <span class="toggle-password" id="toggleSignupPassword">👁️</span>
+          <span class="toggle-password" onclick="toggleVisibility('signupPassword')">👁️</span>
         </div>
         <button type="submit">Create Account</button>
         <div id="signupError" class="error-message"></div>
@@ -156,6 +80,12 @@
       sendPasswordResetEmail,
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
@@ -168,6 +98,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
     // Redirect if already logged in
     onAuthStateChanged(auth, user => {
@@ -175,38 +106,39 @@
     });
 
     // Toggle form views
-    const showLogin = () => {
-      loginFormWrapper.style.display = "block";
-      signupFormWrapper.style.display = "none";
-      resetFormWrapper.style.display = "none";
-    };
-    const showSignup = () => {
-      loginFormWrapper.style.display = "none";
-      signupFormWrapper.style.display = "block";
-      resetFormWrapper.style.display = "none";
-    };
-    const showReset = () => {
-      loginFormWrapper.style.display = "none";
-      signupFormWrapper.style.display = "none";
-      resetFormWrapper.style.display = "block";
-    };
+    const loginFormWrapper = document.getElementById("loginFormWrapper");
+    const signupFormWrapper = document.getElementById("signupFormWrapper");
+    const resetFormWrapper = document.getElementById("resetFormWrapper");
 
     document.getElementById("showSignup").addEventListener("click", (e) => {
       e.preventDefault();
-      showSignup();
-    });
-    document.querySelectorAll("#showLogin").forEach(el => el.addEventListener("click", (e) => {
-      e.preventDefault();
-      showLogin();
-    }));
-    document.getElementById("showReset").addEventListener("click", (e) => {
-      e.preventDefault();
-      showReset();
+      loginFormWrapper.classList.add("hidden");
+      signupFormWrapper.classList.remove("hidden");
+      resetFormWrapper.classList.add("hidden");
     });
 
+    document.querySelectorAll("#showLogin").forEach(el => el.addEventListener("click", (e) => {
+      e.preventDefault();
+      loginFormWrapper.classList.remove("hidden");
+      signupFormWrapper.classList.add("hidden");
+      resetFormWrapper.classList.add("hidden");
+    }));
+
+    document.getElementById("showReset").addEventListener("click", (e) => {
+      e.preventDefault();
+      loginFormWrapper.classList.add("hidden");
+      signupFormWrapper.classList.add("hidden");
+      resetFormWrapper.classList.remove("hidden");
+    });
+
+    // Toggle password visibility
+    window.toggleVisibility = (id) => {
+      const input = document.getElementById(id);
+      input.type = input.type === "password" ? "text" : "password";
+    };
+
     // Login logic
-    const loginForm = document.getElementById("loginForm");
-    loginForm.addEventListener("submit", async (e) => {
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("loginEmail").value.trim();
       const password = document.getElementById("loginPassword").value;
@@ -217,46 +149,43 @@
         await signInWithEmailAndPassword(auth, email, password);
         window.location.href = "index.html";
       } catch (err) {
-        console.error(err);
-        if (err.code === "auth/wrong-password") {
-          loginError.textContent = "Incorrect password.";
-        } else if (err.code === "auth/user-not-found") {
-          loginError.textContent = "No account found with this email.";
-        } else {
-          loginError.textContent = "Login failed. Try again.";
-        }
+        if (err.code === "auth/wrong-password") loginError.textContent = "Incorrect password.";
+        else if (err.code === "auth/user-not-found") loginError.textContent = "No account found with this email.";
+        else loginError.textContent = "Login failed. Try again.";
       }
     });
 
-    // Signup logic
-    const signupForm = document.getElementById("signupForm");
-    signupForm.addEventListener("submit", async (e) => {
+    // Signup logic with Firestore user save
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const firstName = document.getElementById("firstName").value.trim();
+      const lastName = document.getElementById("lastName").value.trim();
       const email = document.getElementById("signupEmail").value.trim();
       const password = document.getElementById("signupPassword").value;
       const signupError = document.getElementById("signupError");
       signupError.textContent = "";
 
       try {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+          firstName,
+          lastName,
+          email
+        });
+
         window.location.href = "index.html";
       } catch (err) {
-        console.error(err);
-        if (err.code === "auth/email-already-in-use") {
-          signupError.textContent = "Email already in use. Try logging in.";
-        } else if (err.code === "auth/invalid-email") {
-          signupError.textContent = "Invalid email format.";
-        } else if (err.code === "auth/weak-password") {
-          signupError.textContent = "Password must be at least 6 characters.";
-        } else {
-          signupError.textContent = "Signup failed. Please try again.";
-        }
+        if (err.code === "auth/email-already-in-use") signupError.textContent = "Email already in use. Try logging in.";
+        else if (err.code === "auth/invalid-email") signupError.textContent = "Invalid email format.";
+        else if (err.code === "auth/weak-password") signupError.textContent = "Password must be at least 6 characters.";
+        else signupError.textContent = "Signup failed. Please try again.";
       }
     });
 
-    // Reset password logic
-    const resetForm = document.getElementById("resetForm");
-    resetForm.addEventListener("submit", async (e) => {
+    // Password reset logic
+    document.getElementById("resetForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("resetEmail").value.trim();
       const message = document.getElementById("resetMessage");
@@ -269,31 +198,11 @@
         message.classList.add("success");
         resetForm.reset();
       } catch (err) {
-        console.error(err);
-        if (err.code === "auth/user-not-found") {
-          message.textContent = "No account found with this email.";
-        } else if (err.code === "auth/invalid-email") {
-          message.textContent = "Invalid email address.";
-        } else {
-          message.textContent = "Something went wrong. Try again.";
-        }
+        if (err.code === "auth/user-not-found") message.textContent = "No account found with this email.";
+        else if (err.code === "auth/invalid-email") message.textContent = "Invalid email address.";
+        else message.textContent = "Something went wrong. Try again.";
         message.classList.add("error-message");
       }
-    });
-
-    // Password toggle logic
-    document.getElementById("toggleLoginPassword").addEventListener("click", function () {
-      const pw = document.getElementById("loginPassword");
-      const isVisible = pw.type === "text";
-      pw.type = isVisible ? "password" : "text";
-      this.textContent = isVisible ? "👁️" : "🙈";
-    });
-
-    document.getElementById("toggleSignupPassword").addEventListener("click", function () {
-      const pw = document.getElementById("signupPassword");
-      const isVisible = pw.type === "text";
-      pw.type = isVisible ? "password" : "text";
-      this.textContent = isVisible ? "👁️" : "🙈";
     });
   </script>
 </body>
