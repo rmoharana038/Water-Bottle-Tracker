@@ -59,12 +59,16 @@ onAuthStateChanged(auth, async (user) => {
 // Show user full name
 async function displayUserName(uid) {
   try {
+    console.log("Fetching user full name for UID:", uid);
     const userDoc = await getDoc(doc(db, "users", uid));
     if (userDoc.exists()) {
       const { firstName, lastName } = userDoc.data();
+      console.log("User name fetched:", firstName, lastName);
       if (userFullNameElement) {
         userFullNameElement.textContent = `${firstName} ${lastName}`;
       }
+    } else {
+      console.warn("User doc not found in Firestore");
     }
   } catch (error) {
     console.error("Error fetching user name:", error);
