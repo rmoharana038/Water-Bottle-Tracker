@@ -1,16 +1,18 @@
 const CACHE_NAME = 'water-tracker-v1';
+
+const base = self.location.pathname.replace(/\/[^\/]*$/, '/');
+
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/script.js',
-  '/auth.js',
-  '/firebase-config.js',
-  '/manifest.json',
-  '/logo.png'
+  `${base}`,
+  `${base}index.html`,
+  `${base}login.html`,
+  `${base}style.css`,
+  `${base}script.js`,
+  `${base}firebase-init.js`,
+  `${base}manifest.json`,
+  `${base}logo.png`
 ];
 
-// Install event - cache required files
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -20,7 +22,6 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) =>
@@ -35,7 +36,6 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - respond with cache or network
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
@@ -43,12 +43,12 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cachedResponse) => {
       return (
         cachedResponse ||
-        fetch(event.request).catch(() => {
-          return new Response('Offline or network error', {
+        fetch(event.request).catch(() =>
+          new Response('Offline or network error', {
             status: 503,
             statusText: 'Offline'
-          });
-        })
+          })
+        )
       );
     })
   );
