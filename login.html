@@ -26,7 +26,7 @@
 </head>
 <body>
   <div class="auth-container">
-    <!-- Login Form -->
+    <!-- Login -->
     <div id="loginFormWrapper">
       <h2>Login</h2>
       <form id="loginForm">
@@ -42,7 +42,7 @@
       <p><a href="#" id="showReset">Forgot Password?</a></p>
     </div>
 
-    <!-- Signup Form -->
+    <!-- Signup -->
     <div id="signupFormWrapper" class="hidden">
       <h2>Sign Up</h2>
       <form id="signupForm">
@@ -59,7 +59,7 @@
       <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
     </div>
 
-    <!-- Reset Password Form -->
+    <!-- Reset Password -->
     <div id="resetFormWrapper" class="hidden">
       <h2>Reset Password</h2>
       <form id="resetForm">
@@ -72,39 +72,24 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { auth, db } from './firebase-init.js';
     import {
-      getAuth,
       signInWithEmailAndPassword,
       createUserWithEmailAndPassword,
       sendPasswordResetEmail,
       onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
-      getFirestore,
       doc,
       setDoc
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDpCzMa8MkWPi9-5oj0O6q-eCbZ9nxmzms",
-      authDomain: "water-bottle-tracker-43537.firebaseapp.com",
-      projectId: "water-bottle-tracker-43537",
-      storageBucket: "water-bottle-tracker-43537.appspot.com",
-      messagingSenderId: "424777349690",
-      appId: "1:424777349690:web:54056417c24cd2f0329303"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     // Redirect if already logged in
     onAuthStateChanged(auth, user => {
       if (user) window.location.href = "index.html";
     });
 
-    // Toggle form views
+    // Toggle UI
     const loginFormWrapper = document.getElementById("loginFormWrapper");
     const signupFormWrapper = document.getElementById("signupFormWrapper");
     const resetFormWrapper = document.getElementById("resetFormWrapper");
@@ -136,7 +121,7 @@
       input.type = input.type === "password" ? "text" : "password";
     };
 
-    // Login logic
+    // Login
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("loginEmail").value.trim();
@@ -154,7 +139,7 @@
       }
     });
 
-    // Signup logic with guaranteed Firestore save
+    // Signup
     document.getElementById("signupForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const firstName = document.getElementById("firstName").value.trim();
@@ -168,7 +153,7 @@
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Save to Firestore after Auth creation
+        // Save name + email in Firestore
         await setDoc(doc(db, "users", user.uid), {
           firstName,
           lastName,
@@ -177,15 +162,14 @@
 
         window.location.href = "index.html";
       } catch (err) {
-        console.error("Signup error:", err);
-        if (err.code === "auth/email-already-in-use") signupError.textContent = "Email already in use.";
-        else if (err.code === "auth/invalid-email") signupError.textContent = "Invalid email.";
-        else if (err.code === "auth/weak-password") signupError.textContent = "Weak password.";
-        else signupError.textContent = "Signup failed.";
+        if (err.code === "auth/email-already-in-use") signupError.textContent = "Email already in use. Try logging in.";
+        else if (err.code === "auth/invalid-email") signupError.textContent = "Invalid email format.";
+        else if (err.code === "auth/weak-password") signupError.textContent = "Password must be at least 6 characters.";
+        else signupError.textContent = "Signup failed. Please try again.";
       }
     });
 
-    // Password reset logic
+    // Reset Password
     document.getElementById("resetForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("resetEmail").value.trim();
@@ -195,13 +179,13 @@
 
       try {
         await sendPasswordResetEmail(auth, email);
-        message.textContent = "Reset link sent!";
+        message.textContent = "Reset link sent! Check your email.";
         message.classList.add("success");
         resetForm.reset();
       } catch (err) {
-        if (err.code === "auth/user-not-found") message.textContent = "No user found.";
-        else if (err.code === "auth/invalid-email") message.textContent = "Invalid email.";
-        else message.textContent = "Error. Try again.";
+        if (err.code === "auth/user-not-found") message.textContent = "No account found with this email.";
+        else if (err.code === "auth/invalid-email") message.textContent = "Invalid email address.";
+        else message.textContent = "Something went wrong. Try again.";
         message.classList.add("error-message");
       }
     });
