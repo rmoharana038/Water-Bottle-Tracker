@@ -1,66 +1,97 @@
-# Water Bottle Tracker - Firebase Web App
+# 💧 Water Bottle Tracker - Firebase Web App (PWA)
 
-Track your daily water bottle usage with real-time syncing, secure login, and offline support.
+Track your daily water bottle usage, expenses, and history with login-based secure access, offline support, and export options — powered by Firebase.
 
-## 🔥 Live Demo
+---
 
-Hosted on GitHub Pages: [https://rmoharana038.github.io/Water-Bottle-Tracker](https://rmoharana038.github.io/Water-Bottle-Tracker)
+## 🔗 Live Demo
 
-## 📁 Files Included
+**GitHub Pages:**  
+👉 [https://rmoharana038.github.io/Water-Bottle-Tracker](https://rmoharana038.github.io/Water-Bottle-Tracker)
 
-- `index.html` - Main app interface (protected)
-- `login.html` - Login, Signup, and Password Reset (combined)
-- `style.css` - Styling for both tracker and auth pages
-- `script.js` - Tracker logic with Firestore integration
-- `firebase-init.js` - Firebase configuration (Auth + Firestore)
-- `manifest.json` - PWA manifest for mobile installation
-- `sw.js` - Service Worker for offline access
-- `logo.png` - App logo/icon
+---
 
-## 🚀 Features
+## 📁 Project Structure
 
-- ✅ **Firebase Auth** – Login, Signup & Password Reset
-- 🗂 **Per-user Data** – Each user has private entries in Firestore
-- 📊 **Dashboard** – View total bottles, amount, and entries
-- 📝 **Edit/Delete** – Inline editing and deleting
-- 📤 **Export** – CSV download and print-ready PDF
-- 📶 **Offline Support** – Works without internet (PWA)
-- 📱 **Installable** – Add to Home Screen (PWA)
-- 💻 **Responsive** – Works on mobile, tablet, desktop
+| File               | Description                                      |
+|--------------------|--------------------------------------------------|
+| `index.html`       | Main dashboard with tracker UI (requires login)  |
+| `login.html`       | Unified page for Login, Signup, and Reset        |
+| `style.css`        | Full responsive and auth styling                 |
+| `script.js`        | App logic (CRUD, stats, export)                  |
+| `firebase-init.js` | Firebase config + Firestore with offline cache   |
+| `manifest.json`    | PWA manifest for installable web app             |
+| `sw.js`            | Service worker for offline use                   |
+| `logo.png`         | App icon and favicon                             |
 
-## 🔐 How to Use
+---
 
-1. **Open `login.html`** and sign up or log in
-2. After login, you are redirected to `index.html`
-3. Add water bottle entries, view stats, and export data
+## 🚀 Key Features
 
-## 📱 Installation as App
+- 🔐 **Firebase Auth** – Login, Signup, and Password Reset
+- 👤 **Per-user Storage** – Private entries for each authenticated user
+- 📈 **Dashboard** – Total bottles, expense, and entry count
+- 📝 **CRUD Support** – Add, edit, and delete entries
+- 📤 **Export Data** – Download CSV or Print as PDF
+- 📦 **Offline Ready** – Works without internet (PWA)
+- 📲 **Installable App** – Add to Home Screen support
+- 💻 **Responsive UI** – Works seamlessly on all devices
 
-1. Open site in Chrome on Android
-2. Tap the **Install** prompt or “Add to Home Screen”
-3. It installs like a native app
+---
 
-## 🛠 Tech Stack
+## 🔧 Usage Instructions
 
-- **Firebase** (Auth + Firestore)
-- **HTML, CSS, JS** (No frameworks)
-- **PWA** support (manifest + service worker)
+1. **Open [`login.html`](login.html)**  
+   Sign up or log in using your email and password
 
-## ⚙️ Customization
+2. **Tracker Dashboard (`index.html`)**  
+   - Add daily water bottle usage
+   - View monthly stats
+   - Edit or delete entries
+   - Export history as CSV or PDF
 
-- 💰 Change bottle price: Edit `amount: bottles * 40` in `script.js`
-- 🪙 Change currency: Replace all `₹` with your symbol
-- 🎨 Change styles: Edit `style.css`
-- 🖼 Update logo: Replace `logo.png`
+3. **Install App (PWA)**  
+   - Visit site in Chrome (Android/Desktop)
+   - Tap **"Install"** or "Add to Home Screen"
 
-## 🔒 Firebase Rules (Recommended)
+---
+
+## ⚙️ Tech Stack
+
+- **Firebase** – Authentication + Firestore DB
+- **JavaScript** – Vanilla JS for logic and UI updates
+- **HTML + CSS** – Fully responsive design
+- **PWA Support** – Service Worker + Manifest
+
+---
+
+## ✨ Customization Guide
+
+| What                | How to change                                      |
+|---------------------|----------------------------------------------------|
+| 💰 Bottle price     | In `script.js`, update: `amount: bottles * 40`     |
+| 💱 Currency         | Replace all `₹` symbols with your local currency   |
+| 🎨 UI Theme         | Modify colors/fonts in `style.css`                 |
+| 🖼 Logo/Icon        | Replace `logo.png` with your own                   |
+
+---
+
+## 🔐 Recommended Firebase Security Rules
 
 ```js
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Water Bottle Entries
     match /entries/{entryId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+    }
+
+    // User Profile Info
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
