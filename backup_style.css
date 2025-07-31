@@ -211,20 +211,6 @@ body {
   margin-bottom: 20px;
 }
 
-.input-group-and-button {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-}
-
-.input-group-and-button .input-group {
-  margin-bottom: 0;
-}
-
-.input-group-and-button .input-wrapper input {
-  width: 150px;
-}
-
 .input-group label {
   display: block;
   font-size: 14px;
