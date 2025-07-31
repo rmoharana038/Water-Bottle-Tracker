@@ -103,6 +103,14 @@ confirmNoBtn.addEventListener('click', () => {
   resolveConfirmationPromise(false);
 });
 
+// Event delegation for delete buttons
+tableBody.addEventListener('click', async (event) => {
+  if (event.target.classList.contains('delete-btn')) {
+    const id = event.target.dataset.id;
+    await deleteEntry(id);
+  }
+});
+
 exportPDFBtn.addEventListener('click', exportToPDF);
 bottleInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') addEntry();
@@ -234,14 +242,6 @@ function renderEntries() {
     `;
     tableBody.appendChild(row);
   });
-
-  // Event delegation for delete buttons
-  tableBody.addEventListener('click', async (event) => {
-    if (event.target.classList.contains('delete-btn')) {
-      const id = event.target.dataset.id;
-      await deleteEntry(id);
-    }
-  });
 }
 
 window.startEdit = function (id) {
@@ -303,11 +303,8 @@ window.cancelEdit = function () {
 };
 
 window.deleteEntry = async function (id) {
-  console.log('Attempting to delete entry with ID:', id);
   const confirmed = await showConfirmation("Delete this entry?");
-  console.log('Confirmation result:', confirmed);
   if (!confirmed) {
-    console.log('Deletion cancelled by user.');
     return;
   }
   try {
@@ -316,7 +313,6 @@ window.deleteEntry = async function (id) {
     renderEntries();
     updateStats();
     showToast('Entry deleted.', 'success');
-    console.log('Entry deleted successfully.');
   } catch (error) {
     console.error('Error deleting entry:', error);
     showToast('Error deleting entry.', 'error');
