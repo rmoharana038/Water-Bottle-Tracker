@@ -129,7 +129,7 @@ function renderEntries() {
   entries.sort((a, b) => {
     const dateA = new Date(`${a.date}T${a.time}`);
     const dateB = new Date(`${b.date}T${b.time}`);
-    return dateB - dateA;
+    return dateA - dateB;
   });
 
   if (entries.length === 0) {
