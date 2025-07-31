@@ -1,10 +1,9 @@
 const CACHE_NAME = 'water-tracker-v1';
 
-const base = '/Water-Bottle-Tracker/';
+const base = '/';
 
 const urlsToCache = [
   `${base}index.html`,
-  `${base}login.html`,
   `${base}style.css`,
   `${base}script.js`,
   `${base}firebase-init.js`,

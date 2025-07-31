@@ -10,7 +10,7 @@
   <link rel="icon" href="logo.png" />
   <style>
     body {
-      background-image: url('login-bg.png');
+      background-image: url('https://i.ibb.co/VW2c3F5p/login-bg.png');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -199,9 +199,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
-          console.log('✅ Service Worker registered:', reg.scope);
-        }).catch(err => {
-          console.warn('❌ Service Worker registration failed:', err);
+          }).catch(err => {
         });
       });
     }
