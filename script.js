@@ -55,6 +55,7 @@ onAuthStateChanged(auth, async (user) => {
     await fetchEntries();
     renderEntries();
     updateStats();
+    confirmationModal.style.display = 'none'; // Ensure modal is hidden on load
   }
 });
 
@@ -76,6 +77,31 @@ async function displayUserName(uid) {
 toastClose.addEventListener('click', hideToast);
 addBtn.addEventListener('click', addEntry);
 clearBtn.addEventListener('click', clearAllEntries);
+
+const confirmationModal = document.getElementById('confirmationModal');
+const confirmationMessage = document.getElementById('confirmationMessage');
+const confirmYesBtn = document.getElementById('confirmYes');
+const confirmNoBtn = document.getElementById('confirmNo');
+
+let resolveConfirmationPromise;
+
+function showConfirmation(message) {
+  confirmationMessage.textContent = message;
+  confirmationModal.style.display = 'block';
+  return new Promise((resolve) => {
+    resolveConfirmationPromise = resolve;
+  });
+}
+
+confirmYesBtn.addEventListener('click', () => {
+  confirmationModal.style.display = 'none';
+  resolveConfirmationPromise(true);
+});
+
+confirmNoBtn.addEventListener('click', () => {
+  confirmationModal.style.display = 'none';
+  resolveConfirmationPromise(false);
+});
 
 exportPDFBtn.addEventListener('click', exportToPDF);
 bottleInput.addEventListener('keypress', (e) => {
@@ -269,7 +295,8 @@ window.cancelEdit = function () {
 };
 
 window.deleteEntry = async function (id) {
-  if (!confirm("Delete this entry?")) return;
+  const confirmed = await showConfirmation("Delete this entry?");
+  if (!confirmed) return;
   await deleteDoc(doc(db, "entries", id));
   entries = entries.filter(e => e.id !== id);
   renderEntries();
@@ -278,7 +305,8 @@ window.deleteEntry = async function (id) {
 };
 
 async function clearAllEntries() {
-  if (!confirm("Clear all entries? This cannot be undone.")) return;
+  const confirmed = await showConfirmation("Clear all entries? This cannot be undone.");
+  if (!confirmed) return;
   for (let entry of entries) {
     await deleteDoc(doc(db, "entries", entry.id));
   }
