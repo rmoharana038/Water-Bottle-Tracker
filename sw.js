@@ -1,6 +1,6 @@
 const CACHE_NAME = 'water-tracker-v1';
 
-const base = '/';
+const base = '/Water-Bottle-Tracker/';
 
 const urlsToCache = [
   `${base}style.css`,
