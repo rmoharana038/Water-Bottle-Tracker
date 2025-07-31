@@ -442,7 +442,8 @@ body {
 }
 
 .modal.show {
-  display: flex;
+  display: flex !important;
+  z-index: 9999; /* Ensure it's on top */
 }
 
 .modal-content {
