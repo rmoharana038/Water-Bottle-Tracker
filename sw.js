@@ -1,6 +1,6 @@
 const CACHE_NAME = 'water-tracker-v1';
 
-const base = self.location.pathname.replace(/\/[^\/]*$/, '/');
+const base = '/Water-Bottle-Tracker/';
 
 const urlsToCache = [
   `${base}index.html`,
