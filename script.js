@@ -34,6 +34,7 @@ const totalBottlesElement = document.getElementById('totalBottles');
 const totalAmountElement = document.getElementById('totalAmount');
 const totalEntriesElement = document.getElementById('totalEntries');
 const currentMonthElement = document.getElementById('currentMonth');
+const monthFilter = document.getElementById('monthFilter');
 const toast = document.getElementById('toast');
 const toastMessage = document.getElementById('toastMessage');
 const toastClose = document.getElementById('toastClose');
@@ -50,6 +51,7 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     await displayUserName(user.uid);
     updateCurrentMonth();
+    populateMonthFilter();
     await fetchEntries();
     renderEntries();
     updateStats();
@@ -84,15 +86,61 @@ window.logout = function () {
   signOut(auth).then(() => window.location.href = "login.html");
 };
 
+function populateMonthFilter() {
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+
+  // Add options for the last 12 months (including current)
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(currentYear, currentMonth - i, 1);
+    const monthName = date.toLocaleString('default', { month: 'long' });
+    const year = date.getFullYear();
+    const value = `${year}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = `${monthName} ${year}`;
+    monthFilter.appendChild(option);
+  }
+  monthFilter.value = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
+}
+
+monthFilter.addEventListener('change', async () => {
+  await fetchEntries();
+  renderEntries();
+  updateStats();
+});
+
 function updateCurrentMonth() {
-  const now = new Date();
-  const monthYear = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const selectedMonthYear = monthFilter.value.split('-');
+  const selectedYear = parseInt(selectedMonthYear[0]);
+  const selectedMonth = parseInt(selectedMonthYear[1]);
+  const date = new Date(selectedYear, selectedMonth - 1, 1);
+  const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
   currentMonthElement.textContent = monthYear;
 }
 
 async function fetchEntries() {
   entries = [];
-  const q = query(collection(db, "entries"), where("uid", "==", currentUser.uid));
+  const selectedMonthYear = monthFilter.value.split('-');
+  const selectedYear = parseInt(selectedMonthYear[0]);
+  const selectedMonth = parseInt(selectedMonthYear[1]);
+
+  // Calculate start and end dates for the selected month
+  const startDate = new Date(selectedYear, selectedMonth - 1, 1);
+  const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999);
+  const startDateString = `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}`;
+  const endDateString = `${endDate.getFullYear()}-${(endDate.getMonth() + 1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}`;
+
+  console.log("Start Date String for Query:", startDateString);
+  console.log("End Date String for Query:", endDateString);
+
+  const q = query(
+    collection(db, "entries"),
+    where("uid", "==", currentUser.uid),
+    where("date", ">=", startDateString),
+    where("date", "<=", endDateString)
+  );
   const snapshot = await getDocs(q);
   snapshot.forEach((docSnap) => {
     entries.push({ id: docSnap.id, ...docSnap.data() });
