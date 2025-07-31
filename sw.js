@@ -5,10 +5,7 @@ const base = '/';
 const urlsToCache = [
   `${base}index.html`,
   `${base}style.css`,
-  `${base}script.js`,
-  `${base}manifest.json`,
-  `${base}icons/icon-192.png`,
-  `${base}icons/icon-512.png`
+  `${base}script.js`
 ];
 
 self.addEventListener('install', (event) => {
