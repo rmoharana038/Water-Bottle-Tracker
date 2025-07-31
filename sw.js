@@ -10,7 +10,8 @@ const urlsToCache = [
   `${base}script.js`,
   `${base}firebase-init.js`,
   `${base}manifest.json`,
-  `${base}logo.png`
+  `${base}icons/icon-192.png`,
+  `${base}icons/icon-512.png`
 ];
 
 self.addEventListener('install', (event) => {
