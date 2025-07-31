@@ -410,18 +410,19 @@ function exportToPDF() {
       <title>${filename}</title>
       <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { text-align: center; color: #333; margin-bottom: 20px; }
-        .report-info { text-align: center; margin-bottom: 30px; color: #555; }
+        h1 { text-align: center; color: #FFFFFF; background-color: #4472C4; padding: 20px; margin-bottom: 20px; font-size: 22px; }
+        .report-info { text-align: center; margin-bottom: 30px; font-size: 12px; }
         .summary-table { width: 50%; margin: 0 auto 30px auto; border-collapse: collapse; }
         .summary-table th, .summary-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .summary-table th { background-color: #f2f2f2; }
+        .summary-table th { background-color: #DDEBF7; font-weight: bold; }
         .entries-table { width: 100%; border-collapse: collapse; }
         .entries-table th, .entries-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .entries-table th { background-color: #f2f2f2; }
+        .entries-table th { background-color: #4472C4; color: #FFFFFF; font-weight: bold; }
+        .entries-table tr:nth-child(even) { background-color: #DDEBF7; }
       </style>
     </head>
     <body>
-      <h1>Water Bottle Tracker Report</h1>
+      <h1><img src="logo.png" alt="Logo" style="height: 40px; vertical-align: middle; margin-right: 10px;">Water Bottle Tracker Report</h1>
       <div class="report-info">Month/Year: ${currentMonthElement.textContent}</div>
 
       <h2>Summary</h2>
@@ -438,7 +439,7 @@ function exportToPDF() {
         </thead>
         <tbody>
           ${entries.map((e, i) => `
-            <tr><td>${i + 1}</td><td>${formatDate(e.date)}</td><td>${formatTime(e.time)}</td><td>${e.bottles}</td><td>${e.amount}</td></tr>
+            <tr><td>${i + 1}</td><td>${formatDate(e.date)}</td><td>${formatTime(e.time)}</td><td>${e.bottles}</td><td>₹${e.amount}</td></tr>
           `).join('')}
         </tbody>
       </table>
