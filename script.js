@@ -86,6 +86,7 @@ const confirmNoBtn = document.getElementById('confirmNo');
 let resolveConfirmationPromise;
 
 function showConfirmation(message) {
+  console.log('showConfirmation called with message:', message);
   confirmationMessage.textContent = message;
   confirmationModal.classList.add('show');
   return new Promise((resolve) => {
@@ -94,18 +95,22 @@ function showConfirmation(message) {
 }
 
 confirmYesBtn.addEventListener('click', () => {
+  console.log('Confirm Yes clicked.');
   confirmationModal.classList.remove('show');
   resolveConfirmationPromise(true);
 });
 
 confirmNoBtn.addEventListener('click', () => {
+  console.log('Confirm No clicked.');
   confirmationModal.classList.remove('show');
   resolveConfirmationPromise(false);
 });
 
 // Event delegation for delete buttons
 tableBody.addEventListener('click', async (event) => {
+  console.log('Table body click event fired.');
   if (event.target.classList.contains('delete-btn')) {
+    console.log('Delete button clicked.');
     const id = event.target.dataset.id;
     await deleteEntry(id);
   }
@@ -303,7 +308,9 @@ window.cancelEdit = function () {
 };
 
 window.deleteEntry = async function (id) {
+  console.log('Before showConfirmation call for ID:', id);
   const confirmed = await showConfirmation("Delete this entry?");
+  console.log('Confirmation result:', confirmed);
   if (!confirmed) {
     return;
   }
