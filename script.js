@@ -86,7 +86,6 @@ const confirmNoBtn = document.getElementById('confirmNo');
 let resolveConfirmationPromise;
 
 function showConfirmation(message) {
-  console.log('showConfirmation called with message:', message);
   confirmationMessage.textContent = message;
   confirmationModal.classList.add('show');
   return new Promise((resolve) => {
@@ -95,13 +94,11 @@ function showConfirmation(message) {
 }
 
 confirmYesBtn.addEventListener('click', () => {
-  console.log('Confirm Yes clicked.');
   confirmationModal.classList.remove('show');
   resolveConfirmationPromise(true);
 });
 
 confirmNoBtn.addEventListener('click', () => {
-  console.log('Confirm No clicked.');
   confirmationModal.classList.remove('show');
   resolveConfirmationPromise(false);
 });
@@ -173,9 +170,6 @@ async function fetchEntries() {
   const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999);
   const startDateString = `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}`;
   const endDateString = `${endDate.getFullYear()}-${(endDate.getMonth() + 1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}`;
-
-  console.log("Start Date String for Query:", startDateString);
-  console.log("End Date String for Query:", endDateString);
 
   const q = query(
     collection(db, "entries"),
