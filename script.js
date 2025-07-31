@@ -229,10 +229,18 @@ function renderEntries() {
       <td>₹${entry.amount}</td>
       <td class="actions">
         <button class="edit-btn" onclick="startEdit('${entry.id}')">Edit</button>
-        <button class="delete-btn" onclick="deleteEntry('${entry.id}')">Delete</button>
+        <button class="delete-btn" data-id="${entry.id}">Delete</button>
       </td>
     `;
     tableBody.appendChild(row);
+  });
+
+  // Event delegation for delete buttons
+  tableBody.addEventListener('click', async (event) => {
+    if (event.target.classList.contains('delete-btn')) {
+      const id = event.target.dataset.id;
+      await deleteEntry(id);
+    }
   });
 }
 
