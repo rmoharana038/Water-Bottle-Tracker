@@ -3,7 +3,6 @@ const CACHE_NAME = 'water-tracker-v1';
 const base = '/';
 
 const urlsToCache = [
-  `${base}index.html`,
   `${base}style.css`,
   `${base}script.js`
 ];
