@@ -78,8 +78,8 @@
         <p class="table-subtitle">Your tracked water usage history</p>
         <div class="header-actions" style="margin-top: 10px;">
           <select id="monthFilter" class="btn btn-outline" style="margin-right: 8px;"></select>
-          <button class="btn btn-outline" id="exportExcel">Export CSV</button>
-          <button class="btn btn-outline" id="exportPDF">Export PDF</button>
+          <button class="btn btn-excel" id="exportExcel" onclick="exportToExcel()"><span class="icon">📊</span> Export Excel</button>
+          <button class="btn btn-pdf" id="exportPDF"><span class="icon">📄</span> Export PDF</button>
         </div>
       </div>
 
@@ -117,6 +117,9 @@
 
   <!-- App Script -->
   <script type="module" src="script.js"></script>
+
+  <!-- XLSX Library -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
   <!-- ✅ Service Worker Registration -->
   <script>

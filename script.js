@@ -50,8 +50,8 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     currentUser = user;
     await displayUserName(user.uid);
-    updateCurrentMonth();
     populateMonthFilter();
+    updateCurrentMonth();
     await fetchEntries();
     renderEntries();
     updateStats();
@@ -76,7 +76,7 @@ async function displayUserName(uid) {
 toastClose.addEventListener('click', hideToast);
 addBtn.addEventListener('click', addEntry);
 clearBtn.addEventListener('click', clearAllEntries);
-exportExcelBtn.addEventListener('click', exportToCSV);
+
 exportPDFBtn.addEventListener('click', exportToPDF);
 bottleInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') addEntry();
@@ -85,6 +85,9 @@ bottleInput.addEventListener('keypress', (e) => {
 window.logout = function () {
   signOut(auth).then(() => window.location.href = "login.html");
 };
+
+window.exportToExcel = exportToExcel;
+window.exportToPDF = exportToPDF;
 
 function populateMonthFilter() {
   const today = new Date();
@@ -293,35 +296,154 @@ function updateStats() {
   totalEntriesElement.textContent = entries.length;
 }
 
-function exportToCSV() {
+function exportToExcel() {
   if (entries.length === 0) return showToast('No entries to export', 'error');
 
-  let csv = `Water Bottle Tracker\n${currentMonthElement.textContent}\n\n`;
-  csv += 'Index,Date,Time,Bottles,Amount\n';
-  entries.forEach((e, i) => {
-    csv += `${i + 1},${formatDate(e.date)},${formatTime(e.time)},${e.bottles},${e.amount}\n`;
+  const monthYear = currentMonthElement.textContent.replace(' ', '-');
+  const filename = `Water_Bottle_Tracker_Report_${monthYear}.xlsx`;
+
+  // Prepare data for XLSX
+  const data = [
+    ['Water Bottle Tracker Report'], // A1
+    [], // A2 (empty row for spacing)
+    ['Month/Year:', currentMonthElement.textContent], // A3, B3
+    [], // A4 (empty row for spacing)
+    ['Summary:'], // A5
+    ['Total Bottles:', totalBottlesElement.textContent], // A6, B6
+    ['Total Amount:', totalAmountElement.textContent], // A7, B7
+    ['Total Entries:', totalEntriesElement.textContent], // A8, B8
+    [], // A9 (empty row for spacing)
+    ['#', 'Date', 'Time', 'Bottles', 'Amount'] // A10:E10
+  ];
+
+  entries.forEach((entry, index) => {
+    data.push([index + 1, formatDate(entry.date), formatTime(entry.time), entry.bottles, `₹${entry.amount}`]);
   });
 
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'entries.csv';
-  link.click();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+
+  // Apply styles
+  // Main Title (A1)
+  ws['A1'].s = {
+    font: { sz: 20, bold: true, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "1E88E5" } }, // Deeper blue
+    alignment: { horizontal: "center", vertical: "center" }
+  };
+  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }]; // Merge A1:E1
+
+  // Month/Year (A3, B3)
+  ws['A3'].s = { font: { sz: 14, bold: true }, alignment: { horizontal: "left" } };
+  ws['B3'].s = { font: { sz: 14 }, alignment: { horizontal: "left" } };
+
+  // Summary Header (A5)
+  ws['A5'].s = {
+    font: { sz: 16, bold: true, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "2E7D32" } }, // Darker green
+    alignment: { horizontal: "center" }
+  };
+  ws['!merges'].push({ s: { r: 4, c: 0 }, e: { r: 4, c: 1 } }); // Merge A5:B5
+
+  // Summary Data (A6:B8)
+  for (let i = 5; i <= 7; i++) { // Rows 6, 7, 8
+    ws[`A${i + 1}`].s = { font: { bold: true }, fill: { fgColor: { rgb: "E8F5E9" } }, border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
+    ws[`B${i + 1}`].s = { font: { bold: true }, fill: { fgColor: { rgb: "E8F5E9" } }, border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
+  }
+
+  // Table Headers (A10:E10)
+  const tableHeaderRow = 9; // 0-indexed row 9 is Excel row 10
+  const tableHeaders = ['#', 'Date', 'Time', 'Bottles', 'Amount'];
+  for (let i = 0; i < tableHeaders.length; i++) {
+    const cellRef = XLSX.utils.encode_cell({ r: tableHeaderRow, c: i });
+    ws[cellRef].s = {
+      font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
+      fill: { fgColor: { rgb: "455A64" } }, // Dark grey
+      alignment: { horizontal: "center" },
+      border: { top: { style: "medium" }, bottom: { style: "medium" }, left: { style: "medium" }, right: { style: "medium" } } // Thicker borders
+    };
+  }
+
+  // Table Data (from row 11 onwards)
+  for (let r = 0; r < entries.length; r++) {
+    const rowNum = tableHeaderRow + 1 + r;
+    const rowColor = r % 2 === 0 ? "F5F5F5" : "FFFFFF"; // Alternating row colors
+    for (let c = 0; c < 5; c++) {
+      const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: c });
+      if (!ws[cellRef]) ws[cellRef] = {}; // Create cell if it doesn't exist
+      ws[cellRef].s = {
+        fill: { fgColor: { rgb: rowColor } },
+        border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } }
+      };
+      if (c === 3 || c === 4) { // Bottles and Amount columns
+        ws[cellRef].s.alignment = { horizontal: "right" };
+      }
+    }
+  }
+
+  // Set column widths
+  ws['!cols'] = [
+    { wch: 5 },  // #
+    { wch: 15 }, // Date
+    { wch: 10 }, // Time
+    { wch: 12 }, // Bottles
+    { wch: 15 }  // Amount
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Entries");
+
+  // Generate and download XLSX file
+  XLSX.writeFile(wb, filename);
+
 }
 
 function exportToPDF() {
   if (entries.length === 0) return showToast('No entries to export', 'error');
+
+  const monthYear = currentMonthElement.textContent.replace(' ', '-');
+  const filename = `Water_Bottle_Tracker_Report_${monthYear}.pdf`;
+
   const w = window.open('', '', 'width=800,height=600');
+  w.document.title = filename;
   w.document.write(`
-    <html><head><title>PDF Export</title></head><body>
-    <h1>Water Bottle Tracker - ${currentMonthElement.textContent}</h1>
-    <table border="1" cellspacing="0" cellpadding="8">
-      <tr><th>#</th><th>Date</th><th>Time</th><th>Bottles</th><th>Amount</th></tr>
-      ${entries.map((e, i) => `
-        <tr><td>${i + 1}</td><td>${formatDate(e.date)}</td><td>${formatTime(e.time)}</td><td>${e.bottles}</td><td>${e.amount}</td></tr>
-      `).join('')}
-    </table>
-    </body></html>
+    <html>
+    <head>
+      <title>${filename}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        .report-info { text-align: center; margin-bottom: 30px; color: #555; }
+        .summary-table { width: 50%; margin: 0 auto 30px auto; border-collapse: collapse; }
+        .summary-table th, .summary-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .summary-table th { background-color: #f2f2f2; }
+        .entries-table { width: 100%; border-collapse: collapse; }
+        .entries-table th, .entries-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .entries-table th { background-color: #f2f2f2; }
+      </style>
+    </head>
+    <body>
+      <h1>Water Bottle Tracker Report</h1>
+      <div class="report-info">Month/Year: ${currentMonthElement.textContent}</div>
+
+      <h2>Summary</h2>
+      <table class="summary-table">
+        <tr><th>Total Bottles</th><td>${totalBottlesElement.textContent}</td></tr>
+        <tr><th>Total Amount</th><td>${totalAmountElement.textContent}</td></tr>
+        <tr><th>Total Entries</th><td>${totalEntriesElement.textContent}</td></tr>
+      </table>
+
+      <h2>Entries</h2>
+      <table class="entries-table">
+        <thead>
+          <tr><th>#</th><th>Date</th><th>Time</th><th>Bottles</th><th>Amount</th></tr>
+        </thead>
+        <tbody>
+          ${entries.map((e, i) => `
+            <tr><td>${i + 1}</td><td>${formatDate(e.date)}</td><td>${formatTime(e.time)}</td><td>${e.bottles}</td><td>${e.amount}</td></tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </body>
+    </html>
   `);
   w.document.close();
   w.print();

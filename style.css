@@ -104,14 +104,33 @@ body {
   background: #f9fafb;
 }
 
-.btn-danger {
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+.btn-excel {
+  background: #217346; /* Excel Green */
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.btn-danger:hover {
-  background: #fecaca;
+.btn-excel:hover {
+  background: #185a36;
+}
+
+.btn-pdf {
+  background: #CC0000; /* Adobe PDF Red */
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-pdf:hover {
+  background: #A30000;
+}
+
+.btn .icon {
+  font-size: 16px;
+  line-height: 1;
 }
 
 /* Stats */
