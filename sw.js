@@ -6,7 +6,6 @@ const urlsToCache = [
   `${base}index.html`,
   `${base}style.css`,
   `${base}script.js`,
-  `${base}firebase-init.js`,
   `${base}manifest.json`,
   `${base}icons/icon-192.png`,
   `${base}icons/icon-512.png`
