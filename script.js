@@ -97,6 +97,7 @@ async function fetchEntries() {
   snapshot.forEach((docSnap) => {
     entries.push({ id: docSnap.id, ...docSnap.data() });
   });
+  entries.sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
 async function addEntry() {
@@ -124,6 +125,13 @@ async function addEntry() {
 }
 
 function renderEntries() {
+  // Sort entries by date (descending) and then by time (descending)
+  entries.sort((a, b) => {
+    const dateA = new Date(`${a.date}T${a.time}`);
+    const dateB = new Date(`${b.date}T${b.time}`);
+    return dateB - dateA;
+  });
+
   if (entries.length === 0) {
     entriesTable.style.display = 'none';
     emptyState.style.display = 'block';
