@@ -295,13 +295,24 @@ window.cancelEdit = function () {
 };
 
 window.deleteEntry = async function (id) {
+  console.log('Attempting to delete entry with ID:', id);
   const confirmed = await showConfirmation("Delete this entry?");
-  if (!confirmed) return;
-  await deleteDoc(doc(db, "entries", id));
-  entries = entries.filter(e => e.id !== id);
-  renderEntries();
-  updateStats();
-  showToast('Entry deleted.', 'success');
+  console.log('Confirmation result:', confirmed);
+  if (!confirmed) {
+    console.log('Deletion cancelled by user.');
+    return;
+  }
+  try {
+    await deleteDoc(doc(db, "entries", id));
+    entries = entries.filter(e => e.id !== id);
+    renderEntries();
+    updateStats();
+    showToast('Entry deleted.', 'success');
+    console.log('Entry deleted successfully.');
+  } catch (error) {
+    console.error('Error deleting entry:', error);
+    showToast('Error deleting entry.', 'error');
+  }
 };
 
 async function clearAllEntries() {
