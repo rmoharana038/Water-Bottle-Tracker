@@ -97,7 +97,7 @@ async function fetchEntries() {
   snapshot.forEach((docSnap) => {
     entries.push({ id: docSnap.id, ...docSnap.data() });
   });
-  entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+  entries.sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
 async function addEntry() {
