@@ -87,19 +87,19 @@ let resolveConfirmationPromise;
 
 function showConfirmation(message) {
   confirmationMessage.textContent = message;
-  confirmationModal.style.display = 'block';
+  confirmationModal.classList.add('show');
   return new Promise((resolve) => {
     resolveConfirmationPromise = resolve;
   });
 }
 
 confirmYesBtn.addEventListener('click', () => {
-  confirmationModal.style.display = 'none';
+  confirmationModal.classList.remove('show');
   resolveConfirmationPromise(true);
 });
 
 confirmNoBtn.addEventListener('click', () => {
-  confirmationModal.style.display = 'none';
+  confirmationModal.classList.remove('show');
   resolveConfirmationPromise(false);
 });
 
