@@ -325,28 +325,28 @@ function exportToExcel() {
   // Apply styles
   // Main Title (A1)
   ws['A1'].s = {
-    font: { sz: 20, bold: true, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "1E88E5" } }, // Deeper blue
+    font: { sz: 22, bold: true, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "4472C4" } },
     alignment: { horizontal: "center", vertical: "center" }
   };
   ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }]; // Merge A1:E1
 
   // Month/Year (A3, B3)
-  ws['A3'].s = { font: { sz: 14, bold: true }, alignment: { horizontal: "left" } };
-  ws['B3'].s = { font: { sz: 14 }, alignment: { horizontal: "left" } };
+  ws['A3'].s = { font: { sz: 12, bold: true } };
+  ws['B3'].s = { font: { sz: 12 } };
 
   // Summary Header (A5)
   ws['A5'].s = {
-    font: { sz: 16, bold: true, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "2E7D32" } }, // Darker green
+    font: { sz: 14, bold: true, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "4472C4" } },
     alignment: { horizontal: "center" }
   };
   ws['!merges'].push({ s: { r: 4, c: 0 }, e: { r: 4, c: 1 } }); // Merge A5:B5
 
   // Summary Data (A6:B8)
   for (let i = 5; i <= 7; i++) { // Rows 6, 7, 8
-    ws[`A${i + 1}`].s = { font: { bold: true }, fill: { fgColor: { rgb: "E8F5E9" } }, border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
-    ws[`B${i + 1}`].s = { font: { bold: true }, fill: { fgColor: { rgb: "E8F5E9" } }, border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
+    ws[`A${i + 1}`].s = { font: { bold: true }, fill: { fgColor: { rgb: "DDEBF7" } }, border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
+    ws[`B${i + 1}`].s = { fill: { fgColor: { rgb: "DDEBF7" } }, border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
   }
 
   // Table Headers (A10:E10)
@@ -356,16 +356,16 @@ function exportToExcel() {
     const cellRef = XLSX.utils.encode_cell({ r: tableHeaderRow, c: i });
     ws[cellRef].s = {
       font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
-      fill: { fgColor: { rgb: "455A64" } }, // Dark grey
+      fill: { fgColor: { rgb: "4472C4" } },
       alignment: { horizontal: "center" },
-      border: { top: { style: "medium" }, bottom: { style: "medium" }, left: { style: "medium" }, right: { style: "medium" } } // Thicker borders
+      border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } }
     };
   }
 
   // Table Data (from row 11 onwards)
   for (let r = 0; r < entries.length; r++) {
     const rowNum = tableHeaderRow + 1 + r;
-    const rowColor = r % 2 === 0 ? "F5F5F5" : "FFFFFF"; // Alternating row colors
+    const rowColor = r % 2 === 0 ? "DDEBF7" : "FFFFFF"; // Alternating row colors
     for (let c = 0; c < 5; c++) {
       const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: c });
       if (!ws[cellRef]) ws[cellRef] = {}; // Create cell if it doesn't exist
