@@ -3,7 +3,6 @@ const CACHE_NAME = 'water-tracker-v1';
 const base = self.location.pathname.replace(/\/[^\/]*$/, '/');
 
 const urlsToCache = [
-  `${base}`,
   `${base}index.html`,
   `${base}login.html`,
   `${base}style.css`,
