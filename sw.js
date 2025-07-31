@@ -3,8 +3,14 @@ const CACHE_NAME = 'water-tracker-v1';
 const base = '/Water-Bottle-Tracker/';
 
 const urlsToCache = [
+  `${base}index.html`,
+  `${base}login.html`,
   `${base}style.css`,
-  `${base}script.js`
+  `${base}script.js`,
+  `${base}firebase-init.js`,
+  `${base}manifest.json`,
+  `${base}icons/icon-192.png`,
+  `${base}icons/icon-512.png`
 ];
 
 self.addEventListener('install', (event) => {
