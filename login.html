@@ -19,20 +19,20 @@
       align-items: center;
       justify-content: center;
     }
-    .auth-container { max-width: 650px; margin: 60px auto; background: rgba(255, 255, 255, 0.05); padding: 32px; border-radius: 8px; box-shadow: none; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
-    .auth-container h2 { text-align: center; margin-bottom: 20px; color: white; }
+    .auth-container { max-width: 650px; margin: 60px auto; background: rgba(0, 0, 0, 0.5); padding: 32px; border-radius: 8px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    .auth-container h2 { text-align: center; margin-bottom: 20px; color: #ffffff; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
     .auth-container form { display: flex; flex-direction: column; gap: 16px; }
-    .auth-container input { padding: 12px; font-size: 16px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 6px; background: rgba(255, 255, 255, 0.1); color: white; backdrop-filter: blur(5px); }
+    .auth-container input { padding: 12px; font-size: 16px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 6px; background: rgba(255, 255, 255, 0.1); color: #ffffff; backdrop-filter: blur(3px); }
     .auth-container input::placeholder { color: rgba(255, 255, 255, 0.7); }
     .password-wrapper { position: relative; }
-    .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: white; }
-    .auth-container button { padding: 12px; background: white; color: black; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: rgba(255, 255, 255, 0.7); }
+    .auth-container button { padding: 12px; background: #ffffff; color: #333333; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s ease; }
     .auth-container button:hover { background: #f0f0f0; }
-    .auth-container p { font-size: 14px; text-align: center; color: white; }
-    .auth-container a { color: #90CAF9; text-decoration: none; } /* Lighter blue for links */
-    .auth-container a:hover { text-decoration: underline; }
-    .error-message, .message { font-size: 14px; text-align: center; color: red; }
-    .success { color: limegreen; }
+    .auth-container p { font-size: 14px; text-align: center; color: #e0e0e0; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
+    .auth-container a { color: #90CAF9; text-decoration: none; transition: color 0.3s ease; } /* Lighter blue for links */
+    .auth-container a:hover { text-decoration: underline; color: #a0caff; }
+    .error-message, .message { font-size: 14px; text-align: center; color: #ffdddd; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
+    .success { color: #ccffcc; }
     .hidden { display: none; }
   </style>
 </head>
